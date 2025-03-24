@@ -1,0 +1,38 @@
+{% extends "app_auth_users/base_app_auth.html" %}
+
+
+{% block title %}Авторизация пользователя{% endblock title %}
+
+{% block header %}Авторизация пользователя{% endblock header %}
+
+
+{% block body %}
+
+<form method="post">
+    {% csrf_token %} 
+    {{ form.as_p }}    
+    <button type="submit" class="btn btn-lg btn-info">Login</button>    
+</form>
+
+{% endblock %}
+
+
+
+{% comment %} <!DOCTYPE html>
+<html lang="en" data-bs-theme="auto">
+    
+<head>
+    <meta charset="UTF-8">
+    <title>Авторизация пользователя</title>
+</head>
+
+<body>
+    <h2>Страница входа</h2>
+    <form method="post">
+        {% csrf_token %} 
+        {{ form.as_p }}    
+        <button type="submit">Login</button>
+    </form>
+</body>
+
+</html> {% endcomment %}

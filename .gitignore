@@ -1,0 +1,13 @@
+py_venv/
+media
+__pycache__
+*.bak
+*.log
+*.pot
+*.pyc
+db.sqlite3
+monitoring_printers/media/
+monitoring_printers/db.sqlite3
+monitoring_printers/db_04 08 2024.json
+import_data.xlsx
+.env

@@ -1,0 +1,44 @@
+{% extends "printers/base.html" %}
+
+{% block title %}{{ title_text }}{% endblock title %}
+
+{% block header %}{{ title_text }}{% endblock header %}
+
+{% block body %}  
+<div class="container-fluid bg-body-tertiary rounded my-3 py-3">    
+    <a class="btn btn-lg btn-primary" href="{% url 'service_object_list' %}" role="button">Вернуться к списку записей &raquo;</a>
+</div>
+
+<div class="container-fluid bg-body-tertiary rounded my-3 py-3">
+    <table class="table table-striped table-bordered text-start">
+        <thead>
+            <tr>
+            <th>№</th>
+            <th>Объекты_обслуживания</th>
+            <th>Действия над записями</th>
+            <th>Реестр распечатанных страниц (формирование / экспорт)</th>
+        </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ data.id }}</td>
+                <td>{{ data.service_object_name }}</td>
+                <td>                                    
+                    <a class="btn btn-sm btn-warning" href="{% url 'service_object_update' id=data.id %}">Изменить  &raquo;</a>
+                    <a class="btn btn-sm btn-danger" href="{% url 'service_object_delete' id=data.id %}">Удалить  &raquo;</a>
+                </td>
+                <td>
+                    <a class="btn btn-sm btn-info" 
+                        href="{% url 'service_object_printed_pages_list_view' id=data.id %}">Сформировать реестр  &raquo;
+                    </a>
+
+                    <a class="btn btn-sm btn-success" 
+                        href="{% url 'service_object_export_printed_pages_xls' id=data.id %}">Экспорт в xls  &raquo;
+                    </a>     
+                </td>  
+            </tr>
+        </tbody>
+    </table>        
+</div>
+
+{% endblock body %}
