@@ -54,6 +54,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'printers.apps.PrintersConfig', # приложение можно поставить в начало списка, чтобы template брались в первую очередь из его раздела
     'app_auth_users.apps.AppAuthUsersConfig',
+
+    'django_dyn_dt', # <-- NEW App
+    'django_tables2',
+    'django_select2',
+    'crispy_forms',
+    'crispy_bootstrap5',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -73,10 +80,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'monitoring_printers.urls'
 
+TEMPLATE_DIR_DATATB = os.path.join(BASE_DIR, "django_dyn_dt/templates") # <-- NEW App
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'), TEMPLATE_DIR_DATATB],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -88,6 +97,9 @@ TEMPLATES = [
         },
     },
 ]
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 WSGI_APPLICATION = 'monitoring_printers.wsgi.application'
 
@@ -220,3 +232,26 @@ AUTHENTICATION_BACKENDS = (
 DRAL_CHECK_DOMAIN = False
 
 # AUTH_LDAP_CONNECTION_OPTIONS = { ldap.OPT_REFERRALS: 0}
+
+
+
+# Настройки Celery
+# CELERY_BROKER_URL = 'redis://localhost:6379/0'  # URL брокера сообщений
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # Хранилище результатов
+
+# # Дополнительные настройки (опционально)
+# CELERY_ACCEPT_CONTENT = ['json']  # Разрешенные форматы сериализации
+# CELERY_TASK_SERIALIZER = 'json'  # Формат сериализации задач
+# CELERY_RESULT_SERIALIZER = 'json'  # Формат сериализации результатов
+# CELERY_TIMEZONE = 'Europe/Moscow'  # Временная зона для планировщика задач
+
+
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Europe/Moscow'

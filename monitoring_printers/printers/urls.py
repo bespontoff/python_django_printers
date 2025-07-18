@@ -12,9 +12,9 @@ urlpatterns = [
 
 
     path('printed_pages_on_printers_list', printed_pages_on_printers_list, name='printed_pages_on_printers_list'),
-    
-    
-    
+
+
+
     # Status_printersModel
     path('status_printers_create/', status_printers_create_view, name='status_printers_create'),
     path('status_printers_list/', status_printers_list_view, name='status_printers_list'),
@@ -60,6 +60,9 @@ urlpatterns = [
     # Printers_in_serviceModel
     path('printers_in_service_create/', printers_in_service_create_view, name='printers_in_service_create'),
     path('printers_in_service_list/', printers_in_service_list_view, name='printers_in_service_list'),
+
+    path('printers_in_service_list_filter/', printers_in_service_list_view_filter, name='printers_in_service_list_filter'),
+
     path('printers_in_service_list_archived/', printers_in_service_list_view_archived, name='printers_in_service_list_archived'),
     path('printers_in_service/<int:id>/', printers_in_service_detail_view, name='printers_in_service_detail'),
     path('printers_in_service_update/<int:id>/', printers_in_service_update_view, name='printers_in_service_update'),
@@ -69,22 +72,27 @@ urlpatterns = [
 
     # path('printers_in_service_export_xls/<int:id>/', printers_in_service_export_xls, name='printers_in_service_export_xls'),
 
-    
+
 
     # Service_objectModel
     path('service_object_create/', service_object_create_view, name='service_object_create'),
-    path('service_object_list/', service_object_list_view, name='service_object_list'), 
+    path('service_object_list/', service_object_list_view, name='service_object_list'),
 
-    path('service_object_list_view_bb/', service_object_list_view_bb, name='service_object_list_view_bb'), 
-    path('service_object_list_view_bmk/', service_object_list_view_bmk, name='service_object_list_view_bmk'),  
-    
+    path('service_object_list_view_bb/', service_object_list_view_bb, name='service_object_list_view_bb'),
+    path('service_object_list_view_bmk/', service_object_list_view_bmk, name='service_object_list_view_bmk'),
+
     path('service_object/<int:id>/', service_object_detail_view, name='service_object_detail'),
     path('service_object_update/<int:id>/', service_object_update_view, name='service_object_update'),
     path('service_object_delete/<int:id>/', service_object_delete_view, name='service_object_delete'),
     path('service_object_export_printed_pages_xls/<int:id>/', service_object_export_printed_pages_xls, name='service_object_export_printed_pages_xls'),
     path('service_object_printed_pages_list_view/<int:id>/', service_object_printed_pages_list_view, name='service_object_printed_pages_list_view'),
 
+    path('async_service_object_printed_pages_list_view/<int:id>/', async_service_object_printed_pages_list_view, name='async_service_object_printed_pages_list_view'),
+
+
+
     path('service_object_printed_pages_all_list_view/', service_object_printed_pages_all_list_view, name='service_object_printed_pages_all_list_view'),
+
     path('service_object_printed_pages_bb_list_view/', service_object_printed_pages_bb_list_view, name='service_object_printed_pages_bb_list_view'),
     path('service_object_printed_pages_bmk_list_view/', service_object_printed_pages_bmk_list_view, name='service_object_printed_pages_bmk_list_view'),
 
@@ -92,12 +100,12 @@ urlpatterns = [
 
     path('service_object_all_export_printed_pages_xls_bb/', service_object_all_export_printed_pages_xls_bb, name='service_object_all_export_printed_pages_xls_bb'),
     path('service_object_all_export_printed_pages_xls_bmk/', service_object_all_export_printed_pages_xls_bmk, name='service_object_all_export_printed_pages_xls_bmk'),
-    
-    
+
+
     # Printed_pagesModel
     # path('service_object_create/', service_object_create_view, name='service_object_create'),
-    path('printed_pages_list/', printed_pages_list_view, name='printed_pages_list'),    
-    
+    path('printed_pages_list/', printed_pages_list_view, name='printed_pages_list'),
+
 
     # export_csv
     # path('export_csv/', export_csv, name='export_csv'),
@@ -105,6 +113,6 @@ urlpatterns = [
 
     # export_xls
     path('export_users_xls/', export_printed_pages_xls, name='export_users_xls'),
-    
-    
+
+
 ]

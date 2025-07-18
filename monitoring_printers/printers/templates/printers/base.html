@@ -4,16 +4,24 @@
     {% load static %}
 
     <script src="/static/assets/js/color-modes.js"></script>
-    
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/static/css/bootstrap.min.css" >
-    <script defer src="/static/js/bootstrap.bundle.min.js"></script>   
+    <script defer src="/static/js/bootstrap.bundle.min.js"></script>
+
+    <script
+			  src="/static/js/jquery-3.7.1.min.js"
+			  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+			  crossorigin="anonymous"></script>
+
+    <link href="/static/css/select2.min.css" rel="stylesheet" />
+    <script src="/static/js/select2.min.js"></script>
 
     <title>{% block title %}{% endblock title %}</title>
 
 
-    <link rel="stylesheet" href="/static/css/cdn.jsdelivr.net_npm_@docsearch_css@3.5.2_dist_style.css">    
+    <link rel="stylesheet" href="/static/css/cdn.jsdelivr.net_npm_@docsearch_css@3.5.2_dist_style.css">
 
 <link href="/static/assets/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -25,13 +33,13 @@
           -moz-user-select: none;
           user-select: none;
         }
-  
+
         @media (min-width: 768px) {
           .bd-placeholder-img-lg {
             font-size: 3.5rem;
           }
         }
-  
+
         .b-example-divider {
           width: 100%;
           height: 3rem;
@@ -40,25 +48,25 @@
           border-width: 1px 0;
           box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
         }
-  
+
         .b-example-vr {
           flex-shrink: 0;
           width: 1.5rem;
           height: 100vh;
         }
-  
+
         .bi {
           vertical-align: -.125em;
           fill: currentColor;
         }
-  
+
         .nav-scroller {
           position: relative;
           z-index: 2;
           height: 2.75rem;
           overflow-y: hidden;
         }
-  
+
         .nav-scroller .nav {
           display: flex;
           flex-wrap: nowrap;
@@ -69,11 +77,11 @@
           white-space: nowrap;
           -webkit-overflow-scrolling: touch;
         }
-  
+
         .btn-bd-primary {
           --bd-violet-bg: #712cf9;
           --bd-violet-rgb: 112.520718, 44.062154, 249.437846;
-  
+
           --bs-btn-font-weight: 600;
           --bs-btn-color: var(--bs-white);
           --bs-btn-bg: var(--bd-violet-bg);
@@ -86,11 +94,11 @@
           --bs-btn-active-bg: #5a23c8;
           --bs-btn-active-border-color: #5a23c8;
         }
-  
+
         .bd-mode-toggle {
           z-index: 1500;
         }
-  
+
         .bd-mode-toggle .dropdown-menu .active .bi {
           display: block !important;
         }
@@ -127,7 +135,7 @@
     <link href="/static/css/navbars-offcanvas.css" rel="stylesheet">
 </head>
 <body>
-  
+
 
     <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
         <symbol id="check2" viewBox="0 0 16 16">
@@ -144,7 +152,7 @@
           <path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/>
         </symbol>
     </svg>
-  
+
     <div class="dropdown position-fixed bottom-0 end-0 mb-3 me-3 bd-mode-toggle">
         <button class="btn btn-bd-primary py-2 dropdown-toggle d-flex align-items-center"
                 id="bd-theme"
@@ -228,8 +236,8 @@
                     <li><a class="dropdown-item" href="{% url 'SNMP_OID_list' %}">SNMP OID</a></li>
                     <li>
                       <hr class="dropdown-divider">
-                    </li>       
-                    
+                    </li>
+
                   </ul>
                 </li>
 
@@ -241,19 +249,19 @@
                     <li><a class="dropdown-item" href="{% url 'printers_in_service_list' %}">Принтеры/МФУ (на обслуживании)</a></li>
                     <li>
                       <hr class="dropdown-divider">
-                    </li>                  
+                    </li>
                     <li><a class="dropdown-item" href="{% url 'printers_in_service_list_archived' %}">Принтеры/МФУ (переведены в архив)</a></li>
                     <li>
                       <hr class="dropdown-divider">
                     </li>
-                    
+
                   </ul>
                 </li>
 
                 <li class="nav-item">
                   <a class="nav-link active" aria-current="page" href="{% url 'service_object_list' %}">Объекты_обслуживания</a>
                 </li>
-                
+
                 <li class="nav-item">
                   <a class="nav-link active" aria-current="page" href="{% url 'printed_pages_list' %}">Распечатано страниц (общий реестр)</a>
                 </li>
@@ -263,7 +271,7 @@
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample02" aria-controls="navbarsExample02" aria-expanded="false" aria-label="Toggle navigation">
                   <span class="navbar-toggler-icon"></span>
                 </button>
-  
+
                 <a class="navbar-brand" href="{% url 'printed_pages_list' %}">Распечатано страниц (общий реестр)</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample02" aria-controls="navbarsExample02" aria-expanded="false" aria-label="Toggle navigation">
                   <span class="navbar-toggler-icon"></span>
@@ -281,7 +289,7 @@
             </div>
           </div>
 
-          <a class="navbar-brand" href="#"></a>          
+          <a class="navbar-brand" href="#"></a>
           <a class="navbar-brand" href="{% url 'service_object_list_view_bb' %}">ББ</a>
           <a class="navbar-brand" href="#">|</a>
           <a class="navbar-brand" href="{% url 'service_object_list_view_bmk' %}">БМК</a>
@@ -291,8 +299,8 @@
           <a class="navbar-brand" href="{% url 'printers_in_service_list' %}">Принтеры/МФУ</a>
 
 
-          
-          
+
+
 
         </div>
       </nav>
@@ -306,13 +314,13 @@
 
       <nav class="navbar navbar-expand fixed-top navbar-dark bg-dark" aria-label="Second navbar example">
         <div class="container-fluid">
-    
 
-    
+
+
 
           <div class="collapse navbar-collapse" id="navbarsExample02">
             <ul class="navbar-nav me-auto">
-              
+
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle active"  href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                   Справочники
@@ -341,9 +349,9 @@
                   <li><a class="dropdown-item" href="{% url 'SNMP_OID_list' %}">SNMP OID</a></li>
                   <li>
                     <hr class="dropdown-divider">
-                  </li> 
-    
-                  
+                  </li>
+
+
                 </ul>
               </li>
 
@@ -355,12 +363,12 @@
                   <li><a class="dropdown-item" href="{% url 'printers_in_service_list' %}">Принтеры/МФУ (на обслуживании)</a></li>
                   <li>
                     <hr class="dropdown-divider">
-                  </li>                  
+                  </li>
                   <li><a class="dropdown-item" href="{% url 'printers_in_service_list_archived' %}">Принтеры/МФУ (переведены в архив)</a></li>
                   <li>
                     <hr class="dropdown-divider">
                   </li>
-                  
+
                 </ul>
               </li>
 
@@ -375,7 +383,7 @@
               </button>
 
 
- 
+
 
 
               <!-- <li class="nav-item dropdown">
@@ -403,31 +411,31 @@
 
 
             </ul>
-            
+
           </div>
         </div>
       </nav>
     </main>
     {% endcomment %}
-       
 
 
-    <main class="container-fluid bg-body-tertiary p-5 rounded">      
+
+    <main class="container-fluid bg-body-tertiary p-5 rounded">
       <div class="container-fluid text-center fs-1 fw-bold my-3 py-1" style="position:sticky; top:0px;">
         {% block header %}{% endblock header %}
-      </div>                
-    
+      </div>
+
       {% comment %} </main>
     <main class="container-fluid"> {% endcomment %}
 
-      <div class="container-fluid bg-body-tertiary rounded">           
-        {% block body %}{% endblock body %}                
+      <div class="container-fluid bg-body-tertiary rounded">
+        {% block body %}{% endblock body %}
       </div>
     </main>
-    
+
     <!-- <div class="container-fluid">
         <div class="row">
-            
+
             <div class="col-1 ">
                 {% now 'l' as current_weekday %}        {% comment %} создаем переменную {% endcomment %}
                 {{ current_weekday }}                   {% comment %} выводим переменную {% endcomment %}
@@ -435,31 +443,42 @@
             <div class="col-1 ">
                 <div>{% now 'H:i' %}</div>
             </div>
-        </div>        
+        </div>
     </div> -->
 
-     
-     
-  
+
+
+
   {% else %}
-    
+
     <main>
       <div class="container-fluid ">
-        <div class="row fixed-top text-center fs-1 fw-bold my-3 py-1" style="position:sticky; top:0px;">               
+        <div class="row fixed-top text-center fs-1 fw-bold my-3 py-1" style="position:sticky; top:0px;">
           <header>Ошибка авторизации</header>
         </div>
-      
-        <div class="row bg-body-tertiary rounded ">          
-          <h1>Вы не авторизированы</h1>    
-          
+
+        <div class="row bg-body-tertiary rounded ">
+          <h1>Вы не авторизированы</h1>
+
         </div>
         <a class="btn btn-lg btn-primary" href="/users/login" role="button">Нажмите для входа в систему &raquo;</a>
       </div>
-      
+
     </main>
-    
+
 
   {% endif %}
+
+
+
+
+
+
+  <div class="container-fluid ">
+    {% block scripts %}
+
+    {% endblock scripts %}
+  </div>
 
   <script src="/static/js/bootstrap.bundle.min.js"></script>
   <script src="/static/assets/dist/js/bootstrap.bundle.min.js"></script>

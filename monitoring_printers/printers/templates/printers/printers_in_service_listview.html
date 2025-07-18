@@ -6,10 +6,15 @@
 
 {% block body %}
 
-<div class="container-fluid bg-body-tertiary rounded my-3 py-3"> 
+<div class="container-fluid bg-body-tertiary rounded my-3 py-3">
     <div class="row mb-2">
         <div class="col-6 align-self-center">
             <a class="btn btn-lg btn-success" href="{% url 'printers_in_service_create' %}" role="button">Добавить новую запись &raquo;</a>
+        </div>
+
+        <div class="col-6 align-self-center">
+            {% comment %} <a class="btn btn-lg btn-info" href="{% url 'reestr_tmts_list_filter'%}" role="button">Фильтрация  &raquo;</a> {% endcomment %}
+            <a class="btn btn-lg btn-info" href="{% url 'printers_in_service_list_filter'%}?{{ request.GET.urlencode }}" role="button">Фильтрация  &raquo;</a>
         </div>
 
         {% comment %} <div class="col-6 align-self-center">
@@ -28,7 +33,7 @@
 
     <div class="container-fluid bg-body-tertiary my-3 py-3">
     <!-- <div class="container-fluid bg-light text-white text-start my-2 py-4"> -->
-        {% if dataset.count > 0 %}                
+        {% if dataset.count > 0 %}
             <table class="table table-striped table-bordered text-start">
                 <thead>
                     <tr>
@@ -54,15 +59,15 @@
                             <td>{{ data.serial_number }}</td>
                             <td>{{ data.printers }}</td>
                             <td>{{ data.status_printer }}</td>
-                            <td>{{ data.print_server }}</td>
-                            <td>{{ data.name_on_print_server }}</td>
+                            <td>{{ data.print_server|default_if_none:"" }}</td>
+                            <td>{{ data.name_on_print_server|default_if_none:"" }}</td>
                             <td>
-                                <a class="btn btn-sm btn-primary" href="http://{{ data.ip_address }}" role="button">{{ data.ip_address }} &raquo;</a>
+                                <a class="btn btn-sm btn-primary" href="http://{{ data.ip_address }}" role="button">{{ data.ip_address|default_if_none:"" }} &raquo;</a>
                             </td>
-                            <td>{{ data.location }}</td>                            
+                            <td>{{ data.location|default_if_none:"" }}</td>
                             <td>{{ data.updated }}</td>
                             <!-- <td>{{ data.archived }}</td> -->
-                            <td>                                    
+                            <td>
                                 <a class="btn btn-sm btn-warning" href="{% url 'printers_in_service_update' id=data.id %}">Изменить  &raquo;</a>
                                 <a class="btn btn-sm btn-danger" href="{% url 'printers_in_service_delete' id=data.id %}">Удалить  &raquo;</a>
                                 {% comment %} <a class="btn btn-sm btn-info" href="#">Комментарии  &raquo;</a> {% endcomment %}
@@ -75,11 +80,11 @@
             </table>
         {% else %}
             <h2>Справочник "{{ title_text }}" пуст</h2>
-        {% endif %}        
+        {% endif %}
     </div>
 
 {% comment %} <div class="container-fluid bg-body-tertiary rounded my-3 py-3">
-    <h5>Добавить новую запись</h5>        
+    <h5>Добавить новую запись</h5>
     <a class="btn btn-lg btn-success" href="{% url 'printers_in_service_create' %}" role="button">Добавить &raquo;</a>
 </div>    {% endcomment %}
 

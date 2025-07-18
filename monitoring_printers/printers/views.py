@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
-# from django.views.generic.detail import DetailView 
-# from django.views.generic.edit import UpdateView 
+# from django.views.generic.detail import DetailView
+# from django.views.generic.edit import UpdateView
 from django.views.generic import ListView, DetailView
 from django.http import Http404, HttpResponse
 from .models import *
@@ -12,13 +12,21 @@ import csv
 from django.contrib.auth.models import User
 import xlwt
 
-
+from .filters import *
 
 from easysnmp import snmp_get
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger, Page
+
+import django_tables2
+from django_tables2 import SingleTableView
+from django_tables2 import RequestConfig
+
+import asyncio
+
 """
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 def snmp_get(oid="oid", hostname="ip", community='public', version=1):
-    
+
     return "000"
 """
 
@@ -35,7 +43,34 @@ def get_data_by_oid(ip, oid):
 
     except Exception as ex:
         return ""
-    
+
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+async def async_get_data_by_oid(ip, oid):
+    try:
+        response = snmp_get(oid, hostname=ip, community='public', version=1)
+        return "" + ip + "_" +  oid + "_" + response.value
+
+    except Exception as ex:
+        return ""
+
+# # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# async def create_massive_by_oid(dataset_printers_in_service):
+
+#     tasks = []
+
+#     for data_printers_in_service in dataset_printers_in_service:
+
+#         # print("" + data_printers_in_service.ip_address)
+
+#         # return "" + ip + "_" +  oid + "_" + response.value
+#         tasks.append(asyncio.create_task(async_get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.sn_oid.oid)))
+#         tasks.append(asyncio.create_task(async_get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.printed_pages_all_oid.oid)))
+
+#     results = await asyncio.gather(*tasks)
+
+#     return results
+
+
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 def printed_pages_on_printers_list(request):
@@ -44,8 +79,21 @@ def printed_pages_on_printers_list(request):
     # dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False).filter(service_object_id=service_object_id)
     dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False)
 
-    dataset = []    
-    for data_printers_in_service in dataset_printers_in_service:        
+
+
+    # results_data = asyncio.run(create_massive_by_oid(dataset_printers_in_service))
+
+    # dict_async_get_data_by_oid = {}
+    # for result in results_data:
+    #     # return "" + ip + "_" +  oid + "_" + response.value
+    #     tmp_massive = result.split("_")
+    #     dict_async_get_data_by_oid[tmp_massive[0] + "_" + tmp_massive[1]] = tmp_massive[2]
+
+
+
+    dataset = []
+    for data_printers_in_service in dataset_printers_in_service:
+
         dataset.append(
             [
                 data_printers_in_service.ip_address,
@@ -55,8 +103,10 @@ def printed_pages_on_printers_list(request):
                 data_printers_in_service.location,
                 get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.sn_oid.oid),
                 get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.printed_pages_all_oid.oid),
+                # dict_async_get_data_by_oid.get(data_printers_in_service.ip_address + "_" + data_printers_in_service.printers.sn_oid.oid),
+                # dict_async_get_data_by_oid.get(data_printers_in_service.ip_address + "_" + data_printers_in_service.printers.printed_pages_all_oid.oid),
             ]
-                    )    
+                    )
 
     # dataset_thead = ['ip','sn','oid_printed_pages_all','Действия над записями',]
     dataset_thead = ['IP-адрес', 'Модель принтера', 'Статус', 'Имя на Print-server', 'Локация/Кабинет', 'S/N','Распечатано страниц (всего)',]
@@ -65,7 +115,7 @@ def printed_pages_on_printers_list(request):
         'title_text':'Распечатано страниц (ББ)',
         'url_return_to_the_list':'printed_pages_on_printers_list',
         'dataset':dataset,
-        'dataset_thead': dataset_thead     
+        'dataset_thead': dataset_thead
         }
 
 
@@ -80,9 +130,9 @@ def printed_pages_on_printers_list(request):
 # Index
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-def index(request):    
+def index(request):
     # Получаем все записи
-    
+
     title_text = "Формирование реестров о количестве распечатанных страниц (принтеры/МФУ)"
     return render(request, 'printers/index.html', {'title_text':title_text})
 
@@ -150,7 +200,7 @@ def status_printers_detail_view(request, id):
         data = StatusPrintersModel.objects.get(id=id)
         title_text = "Статус принтера"
     except StatusPrintersModel.DoesNotExist:
-        raise Http404('Такой записи не существует') 
+        raise Http404('Такой записи не существует')
     return render(request, 'printers/status_printers_detailview.html', {'data': data, 'title_text': title_text})
 
 
@@ -161,7 +211,7 @@ def status_printers_update_view(request, id):
         title_text = "Статусы принтеров (обновление записи)"
     except Exception:
         raise Http404('Такой записи не существует')
-    
+
     # Если метод POST, то это обновленные данные
     # Остальные методы - возврат данных для изменения
     if request.method =='POST':
@@ -177,7 +227,7 @@ def status_printers_update_view(request, id):
             'url_return_to_the_list':'status_printers_list',
         }
     return render(request, 'printers/update.html', context)
-    
+
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 def status_printers_delete_view(request, id):
@@ -186,7 +236,7 @@ def status_printers_delete_view(request, id):
         title_text = "Статусы принтеров (удаление записи)"
     except Exception:
         raise Http404('Такой записи не существует')
- 
+
     if request.method == 'POST':
         data.delete()
         return redirect('status_printers_list')
@@ -237,7 +287,7 @@ def print_servers_detail_view(request, id):
         data = Print_serversModel.objects.get(id=id)
         title_text = "Print-server"
     except Print_serversModel.DoesNotExist:
-        raise Http404('Такой записи не существует') 
+        raise Http404('Такой записи не существует')
     return render(request, 'printers/print_servers_detailview.html', {'data': data, 'title_text': title_text})
 
 
@@ -248,7 +298,7 @@ def print_servers_update_view(request, id):
         title_text = "Print-servers (обновление записи)"
     except Exception:
         raise Http404('Такой записи не существует')
-    
+
     # Если метод POST, то это обновленные данные
     # Остальные методы - возврат данных для изменения
     if request.method =='POST':
@@ -264,7 +314,7 @@ def print_servers_update_view(request, id):
             'url_return_to_the_list':'print_servers_list',
         }
     return render(request, 'printers/update.html', context)
-    
+
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 def print_servers_delete_view(request, id):
@@ -273,13 +323,13 @@ def print_servers_delete_view(request, id):
         title_text = "Print-servers (удаление записи)"
     except Exception:
         raise Http404('Такой записи не существует')
- 
+
     if request.method == 'POST':
         data.delete()
         return redirect('print_servers_list')
     else:
         return render(request, 'printers/delete.html', {'title_text':title_text,'url_return_to_the_list':'print_servers_list',})
-    
+
 
 # ***********************************************************************************************************************************************************
 # CartridgesModel
@@ -323,7 +373,7 @@ def cartridges_detail_view(request, id):
         data = CartridgesModel.objects.get(id=id)
         title_text = "Модель картриджа"
     except CartridgesModel.DoesNotExist:
-        raise Http404('Такой записи не существует') 
+        raise Http404('Такой записи не существует')
     context ={
             'data': data,
             'title_text': title_text,
@@ -339,7 +389,7 @@ def cartridges_update_view(request, id):
         title_text = "Модели картриджей (обновление записи)"
     except Exception:
         raise Http404('Такой записи не существует')
-    
+
     # Если метод POST, то это обновленные данные
     # Остальные методы - возврат данных для изменения
     if request.method =='POST':
@@ -355,7 +405,7 @@ def cartridges_update_view(request, id):
             'url_return_to_the_list':'cartridges_list',
         }
     return render(request, 'printers/update.html', context)
-    
+
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 def cartridges_delete_view(request, id):
@@ -364,13 +414,13 @@ def cartridges_delete_view(request, id):
         title_text = "Модели картриджей (удаление записи)"
     except Exception:
         raise Http404('Такой записи не существует')
- 
+
     if request.method == 'POST':
         data.delete()
         return redirect('cartridges_list')
     else:
         return render(request, 'printers/delete.html', {'title_text':title_text,'url_return_to_the_list':'cartridges_list',})
-    
+
 
 # ***********************************************************************************************************************************************************
 # PrintersModel
@@ -414,7 +464,7 @@ def printers_detail_view(request, id):
         data = PrintersModel.objects.get(id=id)
         title_text = "Модель принтера"
     except PrintersModel.DoesNotExist:
-        raise Http404('Такой записи не существует') 
+        raise Http404('Такой записи не существует')
     context ={
             'data': data,
             'title_text': title_text,
@@ -430,7 +480,7 @@ def printers_update_view(request, id):
         title_text = "Модели принтеров (обновление записи)"
     except Exception:
         raise Http404('Такой записи не существует')
-    
+
     # Если метод POST, то это обновленные данные
     # Остальные методы - возврат данных для изменения
     if request.method =='POST':
@@ -446,7 +496,7 @@ def printers_update_view(request, id):
             'url_return_to_the_list':'printers_list',
         }
     return render(request, 'printers/update.html', context)
-    
+
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 def printers_delete_view(request, id):
@@ -455,13 +505,13 @@ def printers_delete_view(request, id):
         title_text = "Модели принтеров (удаление записи)"
     except Exception:
         raise Http404('Такой записи не существует')
- 
+
     if request.method == 'POST':
         data.delete()
         return redirect('printers_list')
     else:
         return render(request, 'printers/delete.html', {'title_text':title_text,'url_return_to_the_list':'printers_list',})
-    
+
 
 # ***********************************************************************************************************************************************************
 # Type_OIDModel
@@ -505,7 +555,7 @@ def typeOID_detail_view(request, id):
         data = Type_OIDModel.objects.get(id=id)
         title_text = "Type_OID"
     except Type_OIDModel.DoesNotExist:
-        raise Http404('Такой записи не существует') 
+        raise Http404('Такой записи не существует')
     context ={
             'data': data,
             'title_text': title_text,
@@ -521,7 +571,7 @@ def typeOID_update_view(request, id):
         title_text = "Type_OID"
     except Exception:
         raise Http404('Такой записи не существует')
-    
+
     # Если метод POST, то это обновленные данные
     # Остальные методы - возврат данных для изменения
     if request.method =='POST':
@@ -537,7 +587,7 @@ def typeOID_update_view(request, id):
             'url_return_to_the_list':'typeOID_list',
         }
     return render(request, 'printers/update.html', context)
-    
+
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 def typeOID_delete_view(request, id):
@@ -546,13 +596,13 @@ def typeOID_delete_view(request, id):
         title_text = "Type_OID"
     except Exception:
         raise Http404('Такой записи не существует')
- 
+
     if request.method == 'POST':
         data.delete()
         return redirect('typeOID_list')
     else:
         return render(request, 'printers/delete.html', {'title_text':title_text,'url_return_to_the_list':'typeOID_list',})
-    
+
 
 # ***********************************************************************************************************************************************************
 # SNMP_OIDModel
@@ -596,7 +646,7 @@ def SNMP_OID_detail_view(request, id):
         data = SNMP_OIDModel.objects.get(id=id)
         title_text = "SNMP_OID"
     except SNMP_OIDModel.DoesNotExist:
-        raise Http404('Такой записи не существует') 
+        raise Http404('Такой записи не существует')
     context ={
             'data': data,
             'title_text': title_text,
@@ -612,7 +662,7 @@ def SNMP_OID_update_view(request, id):
         title_text = "SNMP_OID"
     except Exception:
         raise Http404('Такой записи не существует')
-    
+
     # Если метод POST, то это обновленные данные
     # Остальные методы - возврат данных для изменения
     if request.method =='POST':
@@ -628,7 +678,7 @@ def SNMP_OID_update_view(request, id):
             'url_return_to_the_list':'SNMP_OID_list',
         }
     return render(request, 'printers/update.html', context)
-    
+
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 def SNMP_OID_delete_view(request, id):
@@ -637,7 +687,7 @@ def SNMP_OID_delete_view(request, id):
         title_text = "SNMP_OID"
     except Exception:
         raise Http404('Такой записи не существует')
- 
+
     if request.method == 'POST':
         data.delete()
         return redirect('SNMP_OID_list')
@@ -681,6 +731,52 @@ def printers_in_service_list_view(request):
     return render(request, 'printers/printers_in_service_listview.html', {'form': form, 'dataset': dataset, 'title_text':title_text})
 
 
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# @login_required
+# @permission_required(perm='laptop.view_reestr_tmts_model', raise_exception=True)
+def printers_in_service_list_view_filter(request):
+    # form = Reestr_TMTS_Form()
+
+    # Получаем все записи
+    dataset = Printers_in_serviceModel.objects.all().select_related('service_object', 'printers', 'status_printer', 'print_server',).exclude(archived=True)
+
+    dataset_filter = Printers_in_serviceModel_Filter(request.GET, queryset=dataset)
+
+    count_dataset = dataset_filter.qs.count()
+
+    title_text = "Принтеры/МФУ (на обслуживании)"
+
+    dataset = dataset_filter.qs
+
+    paginator = Paginator(dataset_filter.qs, 7)  #  paginate_by 5
+
+    # page = request.GET.get('page', 1)
+    page_number = request.GET.get('page')
+
+    try:
+        dataset = paginator.page(page_number)
+    except PageNotAnInteger:
+        dataset = paginator.page(1)
+    except EmptyPage:
+        dataset = paginator.page(paginator.num_pages)
+
+
+    context = {
+            # 'form': form,
+            # 'user_login': request.user,
+            'dataset': dataset,
+            'count_dataset': count_dataset,
+            'title_text':title_text,
+            'filter': dataset_filter,
+        }
+    return render(request, 'printers/printers_in_service_listview_filter.html', context)
+
+
+
+
+
+
+
 
 # export_reestr_printers_in_service_xls
 def printers_in_service_export_printed_pages_xls(request):
@@ -706,7 +802,7 @@ def printers_in_service_detail_view(request, id):
         data = Printers_in_serviceModel.objects.get(id=id)
         title_text = "Принтер/МФУ"
     except Printers_in_serviceModel.DoesNotExist:
-        raise Http404('Такой записи не существует') 
+        raise Http404('Такой записи не существует')
     context ={
             'data': data,
             'title_text': title_text,
@@ -722,7 +818,7 @@ def printers_in_service_update_view(request, id):
         title_text = "Принтеры/МФУ"
     except Exception:
         raise Http404('Такой записи не существует')
-    
+
     # Если метод POST, то это обновленные данные
     # Остальные методы - возврат данных для изменения
     if request.method =='POST':
@@ -738,7 +834,7 @@ def printers_in_service_update_view(request, id):
             'url_return_to_the_list':'printers_in_service_list',
         }
     return render(request, 'printers/update.html', context)
-    
+
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 def printers_in_service_delete_view(request, id):
@@ -747,13 +843,13 @@ def printers_in_service_delete_view(request, id):
         title_text = "Принтеры/МФУ"
     except Exception:
         raise Http404('Такой записи не существует')
- 
+
     if request.method == 'POST':
         data.delete()
         return redirect('printers_in_service_list')
     else:
         return render(request, 'printers/delete.html', {'title_text':title_text,'url_return_to_the_list':'printers_in_service_list',})
-    
+
 
 # ***********************************************************************************************************************************************************
 # Service_objectModel
@@ -833,7 +929,7 @@ def service_object_detail_view(request, id):
         data = Service_objectModel.objects.get(id=id)
         title_text = "Объект_обслуживания"
     except Service_objectModel.DoesNotExist:
-        raise Http404('Такой записи не существует') 
+        raise Http404('Такой записи не существует')
     context ={
             'data': data,
             'title_text': title_text,
@@ -849,7 +945,7 @@ def service_object_update_view(request, id):
         title_text = "Объекты_обслуживания"
     except Exception:
         raise Http404('Такой записи не существует')
-    
+
     # Если метод POST, то это обновленные данные
     # Остальные методы - возврат данных для изменения
     if request.method =='POST':
@@ -865,7 +961,7 @@ def service_object_update_view(request, id):
             'url_return_to_the_list':'service_object_list',
         }
     return render(request, 'printers/update.html', context)
-    
+
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 def service_object_delete_view(request, id):
@@ -874,25 +970,25 @@ def service_object_delete_view(request, id):
         title_text = "Объекты_обслуживания"
     except Exception:
         raise Http404('Такой записи не существует')
- 
+
     if request.method == 'POST':
         data.delete()
         return redirect('service_object_list')
     else:
         return render(request, 'printers/delete.html', {'title_text':title_text,'url_return_to_the_list':'service_object_list',})
-    
+
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 def service_object_export_printed_pages_xls(request, id):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="printed_pages.xls"'
- 
+
     wb = xlwt.Workbook(encoding='utf-8')
     ws = wb.add_sheet('printed_pages')
- 
+
     # Sheet header, first row
     row_num = 0
- 
+
     font_style = xlwt.XFStyle()
     font_style.font.bold = True
 
@@ -908,17 +1004,17 @@ def service_object_export_printed_pages_xls(request, id):
                     'S/N (oid)',
                     'Распечатано страниц (всего)',
                     'Дата формирования',
-                    'Ошибки формирования', 
+                    'Ошибки формирования',
                 ]
- 
+
     for col_num in range(len(columns)):
         ws.write(row_num, col_num, columns[col_num], font_style)
- 
+
     # Sheet body, remaining rows
     font_style = xlwt.XFStyle()
-    
+
     rows = []
-    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания   
+    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
     dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False).filter(service_object_id=id)
 
     for data_printers_in_service in dataset_printers_in_service:
@@ -933,13 +1029,13 @@ def service_object_export_printed_pages_xls(request, id):
 
         sn_oid = get_data_by_oid(ip_address, data_printers_in_service.printers.sn_oid.oid),                                                             #8
         printed_pages_all_oid = get_data_by_oid(ip_address, data_printers_in_service.printers.printed_pages_all_oid.oid),                               #9
-        
+
         # print("^"*35)
         # print(service_object_name)
         # print(print_server)
         # print(name_on_print_server)
-        # print(ip_address) 
-        # print(sn_oid)       
+        # print(ip_address)
+        # print(sn_oid)
         # print(printed_pages_all_oid)
         # print("^"*35)
 
@@ -950,12 +1046,12 @@ def service_object_export_printed_pages_xls(request, id):
             errors += 'S/N не равны| '
         if printed_pages_all_oid[0] == 0 or printed_pages_all_oid[0] == '' or printed_pages_all_oid[0] == None or printed_pages_all_oid[0] =='\x00\x00\x00\x00':
             errors += 'printed_pages_error|'
-            
-        # если ошибок нет, записисываем данные в БД    
-        if errors == "":            
+
+        # если ошибок нет, записисываем данные в БД
+        if errors == "":
             # Printed_pagesModel.objects.create(printers_in_service=data_printers_in_service, printed_pages=int(printed_pages_all_oid[0]))
             Printed_pagesModel.objects.create(
-                printers_in_service=data_printers_in_service.id, 
+                printers_in_service=data_printers_in_service.id,
 
                 service_object_name=data_printers_in_service.service_object.service_object_name,
                 printers_name=data_printers_in_service.printers.name,
@@ -965,9 +1061,9 @@ def service_object_export_printed_pages_xls(request, id):
                 location = data_printers_in_service.location,
 
                 printed_pages=int(printed_pages_all_oid[0]))
-        
+
         rows.append(
-            [               
+            [
 
 
                 service_object_name,       #0
@@ -984,17 +1080,17 @@ def service_object_export_printed_pages_xls(request, id):
                 errors,                    #11
 
             ]
-                    )    
+                    )
 
-    # print(rows)    
-   
+    # print(rows)
+
     rows = [[x.strftime("%Y-%m-%d %H:%M") if isinstance(x, datetime.datetime) else x for x in row] for row in rows ]
-    
+
     for row in rows:
         row_num += 1
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num], font_style)
- 
+
     wb.save(response)
     return response
 
@@ -1003,13 +1099,13 @@ def service_object_export_printed_pages_xls(request, id):
 def service_object_all_export_printed_pages_xls(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="printed_pages.xls"'
- 
+
     wb = xlwt.Workbook(encoding='utf-8')
     ws = wb.add_sheet('printed_pages')
- 
+
     # Sheet header, first row
     row_num = 0
- 
+
     font_style = xlwt.XFStyle()
     font_style.font.bold = True
 
@@ -1025,17 +1121,17 @@ def service_object_all_export_printed_pages_xls(request):
                     'S/N (oid)',
                     'Распечатано страниц (всего)',
                     'Дата формирования',
-                    'Ошибки формирования', 
+                    'Ошибки формирования',
                 ]
- 
+
     for col_num in range(len(columns)):
         ws.write(row_num, col_num, columns[col_num], font_style)
- 
+
     # Sheet body, remaining rows
     font_style = xlwt.XFStyle()
-    
+
     rows = []
-    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания   
+    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
     dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False)
 
     for data_printers_in_service in dataset_printers_in_service:
@@ -1050,13 +1146,13 @@ def service_object_all_export_printed_pages_xls(request):
 
         sn_oid = get_data_by_oid(ip_address, data_printers_in_service.printers.sn_oid.oid),                                                             #8
         printed_pages_all_oid = get_data_by_oid(ip_address, data_printers_in_service.printers.printed_pages_all_oid.oid),                               #9
-        
+
         # print("^"*35)
         # print(service_object_name)
         # print(print_server)
         # print(name_on_print_server)
-        # print(ip_address) 
-        # print(sn_oid)       
+        # print(ip_address)
+        # print(sn_oid)
         # print(printed_pages_all_oid)
         # print("^"*35)
 
@@ -1067,12 +1163,12 @@ def service_object_all_export_printed_pages_xls(request):
             errors += 'S/N не равны| '
         if printed_pages_all_oid[0] == 0 or printed_pages_all_oid[0] == '' or printed_pages_all_oid[0] == None or printed_pages_all_oid[0] =='\x00\x00\x00\x00':
             errors += 'printed_pages_error|'
-            
-        # если ошибок нет, записисываем данные в БД    
-        if errors == "":            
+
+        # если ошибок нет, записисываем данные в БД
+        if errors == "":
             # Printed_pagesModel.objects.create(printers_in_service=data_printers_in_service, printed_pages=int(printed_pages_all_oid[0]))
             Printed_pagesModel.objects.create(
-                printers_in_service=data_printers_in_service.id, 
+                printers_in_service=data_printers_in_service.id,
 
                 service_object_name=data_printers_in_service.service_object.service_object_name,
                 printers_name=data_printers_in_service.printers.name,
@@ -1082,9 +1178,9 @@ def service_object_all_export_printed_pages_xls(request):
                 location = data_printers_in_service.location,
 
                 printed_pages=int(printed_pages_all_oid[0]))
-        
+
         rows.append(
-            [               
+            [
 
 
                 service_object_name,       #0
@@ -1101,17 +1197,17 @@ def service_object_all_export_printed_pages_xls(request):
                 errors,                    #11
 
             ]
-                    )    
+                    )
 
-    # print(rows)    
-   
+    # print(rows)
+
     rows = [[x.strftime("%Y-%m-%d %H:%M") if isinstance(x, datetime.datetime) else x for x in row] for row in rows ]
-    
+
     for row in rows:
         row_num += 1
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num], font_style)
- 
+
     wb.save(response)
     return response
 
@@ -1120,13 +1216,13 @@ def service_object_all_export_printed_pages_xls(request):
 def service_object_all_export_printed_pages_xls_bb(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="printed_pages.xls"'
- 
+
     wb = xlwt.Workbook(encoding='utf-8')
     ws = wb.add_sheet('printed_pages')
- 
+
     # Sheet header, first row
     row_num = 0
- 
+
     font_style = xlwt.XFStyle()
     font_style.font.bold = True
 
@@ -1142,17 +1238,17 @@ def service_object_all_export_printed_pages_xls_bb(request):
                     'S/N (oid)',
                     'Распечатано страниц (всего)',
                     'Дата формирования',
-                    'Ошибки формирования', 
+                    'Ошибки формирования',
                 ]
- 
+
     for col_num in range(len(columns)):
         ws.write(row_num, col_num, columns[col_num], font_style)
- 
+
     # Sheet body, remaining rows
     font_style = xlwt.XFStyle()
-    
+
     rows = []
-    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания   
+    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
     dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False, service_object__service_object_name="ББ")
 
     for data_printers_in_service in dataset_printers_in_service:
@@ -1167,13 +1263,13 @@ def service_object_all_export_printed_pages_xls_bb(request):
 
         sn_oid = get_data_by_oid(ip_address, data_printers_in_service.printers.sn_oid.oid),                                                             #8
         printed_pages_all_oid = get_data_by_oid(ip_address, data_printers_in_service.printers.printed_pages_all_oid.oid),                               #9
-        
+
         # print("^"*35)
         # print(service_object_name)
         # print(print_server)
         # print(name_on_print_server)
-        # print(ip_address) 
-        # print(sn_oid)       
+        # print(ip_address)
+        # print(sn_oid)
         # print(printed_pages_all_oid)
         # print("^"*35)
 
@@ -1184,12 +1280,12 @@ def service_object_all_export_printed_pages_xls_bb(request):
             errors += 'S/N не равны| '
         if printed_pages_all_oid[0] == 0 or printed_pages_all_oid[0] == '' or printed_pages_all_oid[0] == None or printed_pages_all_oid[0] =='\x00\x00\x00\x00':
             errors += 'printed_pages_error|'
-            
-        # если ошибок нет, записисываем данные в БД    
-        if errors == "":            
+
+        # если ошибок нет, записисываем данные в БД
+        if errors == "":
             # Printed_pagesModel.objects.create(printers_in_service=data_printers_in_service, printed_pages=int(printed_pages_all_oid[0]))
             Printed_pagesModel.objects.create(
-                printers_in_service=data_printers_in_service.id, 
+                printers_in_service=data_printers_in_service.id,
 
                 service_object_name=data_printers_in_service.service_object.service_object_name,
                 printers_name=data_printers_in_service.printers.name,
@@ -1199,9 +1295,9 @@ def service_object_all_export_printed_pages_xls_bb(request):
                 location = data_printers_in_service.location,
 
                 printed_pages=int(printed_pages_all_oid[0]))
-        
+
         rows.append(
-            [               
+            [
 
 
                 service_object_name,       #0
@@ -1218,17 +1314,17 @@ def service_object_all_export_printed_pages_xls_bb(request):
                 errors,                    #11
 
             ]
-                    )    
+                    )
 
-    # print(rows)    
-   
+    # print(rows)
+
     rows = [[x.strftime("%Y-%m-%d %H:%M") if isinstance(x, datetime.datetime) else x for x in row] for row in rows ]
-    
+
     for row in rows:
         row_num += 1
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num], font_style)
- 
+
     wb.save(response)
     return response
 
@@ -1237,13 +1333,13 @@ def service_object_all_export_printed_pages_xls_bb(request):
 def service_object_all_export_printed_pages_xls_bmk(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="printed_pages.xls"'
- 
+
     wb = xlwt.Workbook(encoding='utf-8')
     ws = wb.add_sheet('printed_pages')
- 
+
     # Sheet header, first row
     row_num = 0
- 
+
     font_style = xlwt.XFStyle()
     font_style.font.bold = True
 
@@ -1259,17 +1355,17 @@ def service_object_all_export_printed_pages_xls_bmk(request):
                     'S/N (oid)',
                     'Распечатано страниц (всего)',
                     'Дата формирования',
-                    'Ошибки формирования', 
+                    'Ошибки формирования',
                 ]
- 
+
     for col_num in range(len(columns)):
         ws.write(row_num, col_num, columns[col_num], font_style)
- 
+
     # Sheet body, remaining rows
     font_style = xlwt.XFStyle()
-    
+
     rows = []
-    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания   
+    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
     dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False).exclude(service_object__service_object_name="ББ")
 
     for data_printers_in_service in dataset_printers_in_service:
@@ -1284,13 +1380,13 @@ def service_object_all_export_printed_pages_xls_bmk(request):
 
         sn_oid = get_data_by_oid(ip_address, data_printers_in_service.printers.sn_oid.oid),                                                             #8
         printed_pages_all_oid = get_data_by_oid(ip_address, data_printers_in_service.printers.printed_pages_all_oid.oid),                               #9
-        
+
         # print("^"*35)
         # print(service_object_name)
         # print(print_server)
         # print(name_on_print_server)
-        # print(ip_address) 
-        # print(sn_oid)       
+        # print(ip_address)
+        # print(sn_oid)
         # print(printed_pages_all_oid)
         # print("^"*35)
 
@@ -1301,12 +1397,12 @@ def service_object_all_export_printed_pages_xls_bmk(request):
             errors += 'S/N не равны| '
         if printed_pages_all_oid[0] == 0 or printed_pages_all_oid[0] == '' or printed_pages_all_oid[0] == None or printed_pages_all_oid[0] =='\x00\x00\x00\x00':
             errors += 'printed_pages_error|'
-            
-        # если ошибок нет, записисываем данные в БД    
-        if errors == "":            
+
+        # если ошибок нет, записисываем данные в БД
+        if errors == "":
             # Printed_pagesModel.objects.create(printers_in_service=data_printers_in_service, printed_pages=int(printed_pages_all_oid[0]))
             Printed_pagesModel.objects.create(
-                printers_in_service=data_printers_in_service.id, 
+                printers_in_service=data_printers_in_service.id,
 
                 service_object_name=data_printers_in_service.service_object.service_object_name,
                 printers_name=data_printers_in_service.printers.name,
@@ -1316,9 +1412,9 @@ def service_object_all_export_printed_pages_xls_bmk(request):
                 location = data_printers_in_service.location,
 
                 printed_pages=int(printed_pages_all_oid[0]))
-        
+
         rows.append(
-            [               
+            [
 
 
                 service_object_name,       #0
@@ -1335,27 +1431,119 @@ def service_object_all_export_printed_pages_xls_bmk(request):
                 errors,                    #11
 
             ]
-                    )    
+                    )
 
-    # print(rows)    
-   
+    # print(rows)
+
     rows = [[x.strftime("%Y-%m-%d %H:%M") if isinstance(x, datetime.datetime) else x for x in row] for row in rows ]
-    
+
     for row in rows:
         row_num += 1
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num], font_style)
- 
+
     wb.save(response)
     return response
 
 
 
+
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-def service_object_printed_pages_list_view(request, id):    
+# from django.shortcuts import render, redirect
+# from django.contrib import messages
+# from .forms import RegistrationForm
+# from .tasks import send_welcome_email
+
+# def register(request):
+#     if request.method == 'POST':
+#         form = RegistrationForm(request.POST)
+#         if form.is_valid():
+#             user = form.save()
+#             # Запускаем асинхронную задачу
+#             send_welcome_email.delay(user.id)
+#             messages.success(request, 'Регистрация успешна! Проверьте вашу почту.')
+#             return redirect('home')
+#     else:
+#         form = RegistrationForm()
+#     return render(request, 'users/register.html', {'form': form})
+
+
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+def async_service_object_printed_pages_list_view(request, id):
+
+    from .tasks import get_data_by_oid
+
+    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
+    dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False).filter(service_object_id=id)
+
+    for data_printers_in_service in dataset_printers_in_service:
+        # Запускаем асинхронную задачу
+        get_data_by_oid.delay(data_printers_in_service.ip_address,
+                                        data_printers_in_service.printers.sn_oid.oid,
+                                        data_printers_in_service.printers.printed_pages_all_oid.oid,
+                                        data_printers_in_service.id)
+
+
+
+    id_printers_massive = []
+    for data_printers_in_service in dataset_printers_in_service:
+        id_printers_massive.append(data_printers_in_service.id)
+
+    # print(id_printers_massive)
+
+    for id_printer in id_printers_massive:
+        try:
+
+            # data_printers_in_service = Printed_pagesModel.objects.filter(printers_in_service=data_printers_in_service.id).latest('created')
+            data_printers_in_service = Printed_pagesModel.objects.filter(printers_in_service=id_printer).latest('created')
+
+            if data_printers_in_service == None:
+                continue
+
+            print(
+                    str(data_printers_in_service.id)\
+                    + ' | ' + str(data_printers_in_service.printers_in_service)\
+                    + ' | ' + str(data_printers_in_service.service_object_name) \
+                    + ' | ' + str(data_printers_in_service.printers_name) \
+                    + ' | ' + str(data_printers_in_service.serial_number) \
+                    + ' | ' + str(data_printers_in_service.ip_address) \
+                    + ' | ' + str(data_printers_in_service.name_on_print_server) \
+                    + ' | ' + str(data_printers_in_service.location) \
+                    + ' | ' + str(data_printers_in_service.created) \
+                    + ' | ' + str(data_printers_in_service.printed_pages)
+                )
+
+        except Exception as ex:
+            print(f"Ошибка выполнения функции async_service_object_printed_pages_list_view(request, id): {ex} ||| id_printer: {id_printer}")
+            continue
+
+
+    # Переходим на главную страницу, пока выполняются запросы
+    # Получаем все записи
+    dataset = Service_objectModel.objects.all()
+    title_text = "Объекты_обслуживания"
+
+    context = {
+            'dataset': dataset,
+            'user_login': request.user,
+            'title_text':title_text,
+            'priznak':'all',
+            # 'url_return_to_the_list':'reestr_tmts_list',
+        }
+    return render(request, 'printers/service_object_listview.html', context=context)
+
+
+
+
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+def service_object_printed_pages_list_view(request, id):
     form = Printed_pagesForm()
 
-    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания   
+    print("+"*35)
+    print("Start tasks - datetime: ", datetime.datetime.now())
+    print("-"*35)
+
+    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
     dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False).filter(service_object_id=id)
 
 
@@ -1363,17 +1551,41 @@ def service_object_printed_pages_list_view(request, id):
 
     title_text = "Распечатано страниц"
 
-    dataset = []    
-
-    # print("+"*35)
-    # print(dataset_printers_in_service)
-    # print("-"*35)
+    dataset = []
 
 
-    for data_printers_in_service in dataset_printers_in_service:        
-        
+
+    # #####
+    # tasks = []
+
+    # for data_printers_in_service in dataset_printers_in_service:
+
+    #     # print("" + data_printers_in_service.ip_address)
+
+    #     # return "" + ip + "_" +  oid + "_" + response.value
+    #     tasks.append(asyncio.create_task(async_get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.sn_oid.oid)))
+    #     tasks.append(asyncio.create_task(async_get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.printed_pages_all_oid.oid)))
+
+    # results_data = await asyncio.gather(*tasks)
+
+    # # results_data = asyncio.run(create_massive_by_oid(dataset_printers_in_service))
+
+    # dict_async_get_data_by_oid = {}
+    # for result in results_data:
+    #     # return "" + ip + "_" +  oid + "_" + response.value
+    #     tmp_massive = result.split("_")
+    #     dict_async_get_data_by_oid[tmp_massive[0] + "_" + tmp_massive[1]] = tmp_massive[2]
+    # #####
+
+
+    for data_printers_in_service in dataset_printers_in_service:
+
         sn_oid = get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.sn_oid.oid),                     #8
         printed_pages_all_oid = get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.printed_pages_all_oid.oid),      #9
+        # sn_oid =  dict_async_get_data_by_oid.get(data_printers_in_service.ip_address + "_" + data_printers_in_service.printers.sn_oid.oid)
+        # printed_pages_all_oid = dict_async_get_data_by_oid.get(data_printers_in_service.ip_address + "_" + data_printers_in_service.printers.printed_pages_all_oid.oid)
+
+
 
         # проверяем корректность данных
         errors = ""
@@ -1382,11 +1594,11 @@ def service_object_printed_pages_list_view(request, id):
             errors += 'S/N не равны| '
         if printed_pages_all_oid[0] == 0 or printed_pages_all_oid[0] == '' or printed_pages_all_oid[0] == None or printed_pages_all_oid[0] =='\x00\x00\x00\x00':
             errors += 'printed_pages_error|'
-            
-        # если ошибок нет, записисываем данные в БД    
-        if errors == "":            
+
+        # если ошибок нет, записисываем данные в БД
+        if errors == "":
             Printed_pagesModel.objects.create(
-                printers_in_service=data_printers_in_service.id, 
+                printers_in_service=data_printers_in_service.id,
 
                 service_object_name=data_printers_in_service.service_object.service_object_name,
                 printers_name=data_printers_in_service.printers.name,
@@ -1395,8 +1607,8 @@ def service_object_printed_pages_list_view(request, id):
                 name_on_print_server = data_printers_in_service.name_on_print_server,
                 location = data_printers_in_service.location,
 
-                printed_pages=int(printed_pages_all_oid[0]))        
-        
+                printed_pages=int(printed_pages_all_oid[0]))
+
         dataset.append(
             [
                 data_printers_in_service.service_object,            #0
@@ -1414,11 +1626,13 @@ def service_object_printed_pages_list_view(request, id):
 
             ]
                     )
-    
-    # print("+"*35)
-    # for data in dataset:
-    #     print(data)
-    # print("-"*35)  
+
+    print("+"*35)
+    print("End_tasks - datetime: ", datetime.datetime.now())
+    print("+"*35)
+    for data in dataset:
+        print(data)
+    print("-"*35)
 
     name_colomns = [
                     'Объект_обслуживания',
@@ -1432,9 +1646,9 @@ def service_object_printed_pages_list_view(request, id):
                     'S/N (oid)',
                     'Распечатано страниц (всего)',
                     'Дата формирования',
-                    'Ошибки формирования', 
+                    'Ошибки формирования',
                     ]
-    
+
     name_file='printed_pages_list'
 
 
@@ -1445,7 +1659,7 @@ def service_object_printed_pages_list_view(request, id):
             'dataset_count': len(dataset),
             # 'url_export_csv':'export_csv',
             # 'url_export_csv':'service_object_list',
-            'name_colomns': name_colomns,      
+            'name_colomns': name_colomns,
             'name_file': name_file,
         }
 
@@ -1453,10 +1667,10 @@ def service_object_printed_pages_list_view(request, id):
 
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-def service_object_printed_pages_all_list_view(request):    
+def service_object_printed_pages_all_list_view(request):
     form = Printed_pagesForm()
 
-    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания   
+    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
     dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False)
 
 
@@ -1464,15 +1678,15 @@ def service_object_printed_pages_all_list_view(request):
 
     title_text = "Распечатано страниц"
 
-    dataset = []    
+    dataset = []
 
     # print("+"*35)
     # print(dataset_printers_in_service)
     # print("-"*35)
 
 
-    for data_printers_in_service in dataset_printers_in_service:        
-        
+    for data_printers_in_service in dataset_printers_in_service:
+
         sn_oid = get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.sn_oid.oid),                     #8
         printed_pages_all_oid = get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.printed_pages_all_oid.oid),      #9
 
@@ -1483,12 +1697,12 @@ def service_object_printed_pages_all_list_view(request):
             errors += 'S/N не равны| '
         if printed_pages_all_oid[0] == 0 or printed_pages_all_oid[0] == '' or printed_pages_all_oid[0] == None or printed_pages_all_oid[0] =='\x00\x00\x00\x00':
             errors += 'printed_pages_error|'
-            
-        # если ошибок нет, записисываем данные в БД    
-        if errors == "":            
-            # Printed_pagesModel.objects.create(printers_in_service=data_printers_in_service, printed_pages=int(printed_pages_all_oid[0]))     
+
+        # если ошибок нет, записисываем данные в БД
+        if errors == "":
+            # Printed_pagesModel.objects.create(printers_in_service=data_printers_in_service, printed_pages=int(printed_pages_all_oid[0]))
             Printed_pagesModel.objects.create(
-                printers_in_service=data_printers_in_service.id, 
+                printers_in_service=data_printers_in_service.id,
 
                 service_object_name=data_printers_in_service.service_object.service_object_name,
                 printers_name=data_printers_in_service.printers.name,
@@ -1497,8 +1711,8 @@ def service_object_printed_pages_all_list_view(request):
                 name_on_print_server = data_printers_in_service.name_on_print_server,
                 location = data_printers_in_service.location,
 
-                printed_pages=int(printed_pages_all_oid[0]))   
-        
+                printed_pages=int(printed_pages_all_oid[0]))
+
         dataset.append(
             [
                 data_printers_in_service.service_object,            #0
@@ -1516,11 +1730,11 @@ def service_object_printed_pages_all_list_view(request):
 
             ]
                     )
-    
+
     # print("+"*35)
     # for data in dataset:
     #     print(data)
-    # print("-"*35)  
+    # print("-"*35)
 
     name_colomns = [
                     'Объект_обслуживания',
@@ -1534,9 +1748,9 @@ def service_object_printed_pages_all_list_view(request):
                     'S/N (oid)',
                     'Распечатано страниц (всего)',
                     'Дата формирования',
-                    'Ошибки формирования', 
+                    'Ошибки формирования',
                     ]
-    
+
     name_file='printed_pages_list'
 
 
@@ -1547,7 +1761,7 @@ def service_object_printed_pages_all_list_view(request):
             'dataset_count': len(dataset),
             # 'url_export_csv':'export_csv',
             # 'url_export_csv':'service_object_list',
-            'name_colomns': name_colomns,      
+            'name_colomns': name_colomns,
             'name_file': name_file,
         }
 
@@ -1555,10 +1769,10 @@ def service_object_printed_pages_all_list_view(request):
 
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-def service_object_printed_pages_bb_list_view(request):    
+def service_object_printed_pages_bb_list_view(request):
     form = Printed_pagesForm()
 
-    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания   
+    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
     dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False, service_object__service_object_name="ББ")
 
 
@@ -1566,15 +1780,15 @@ def service_object_printed_pages_bb_list_view(request):
 
     title_text = "Распечатано страниц"
 
-    dataset = []    
+    dataset = []
 
     # print("+"*35)
     # print(dataset_printers_in_service)
     # print("-"*35)
 
 
-    for data_printers_in_service in dataset_printers_in_service:        
-        
+    for data_printers_in_service in dataset_printers_in_service:
+
         sn_oid = get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.sn_oid.oid),                     #8
         printed_pages_all_oid = get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.printed_pages_all_oid.oid),      #9
 
@@ -1585,12 +1799,12 @@ def service_object_printed_pages_bb_list_view(request):
             errors += 'S/N не равны| '
         if printed_pages_all_oid[0] == 0 or printed_pages_all_oid[0] == '' or printed_pages_all_oid[0] == None or printed_pages_all_oid[0] =='\x00\x00\x00\x00':
             errors += 'printed_pages_error|'
-            
-        # если ошибок нет, записисываем данные в БД    
-        if errors == "":            
-            # Printed_pagesModel.objects.create(printers_in_service=data_printers_in_service, printed_pages=int(printed_pages_all_oid[0]))   
+
+        # если ошибок нет, записисываем данные в БД
+        if errors == "":
+            # Printed_pagesModel.objects.create(printers_in_service=data_printers_in_service, printed_pages=int(printed_pages_all_oid[0]))
             Printed_pagesModel.objects.create(
-                printers_in_service=data_printers_in_service.id, 
+                printers_in_service=data_printers_in_service.id,
 
                 service_object_name=data_printers_in_service.service_object.service_object_name,
                 printers_name=data_printers_in_service.printers.name,
@@ -1599,8 +1813,8 @@ def service_object_printed_pages_bb_list_view(request):
                 name_on_print_server = data_printers_in_service.name_on_print_server,
                 location = data_printers_in_service.location,
 
-                printed_pages=int(printed_pages_all_oid[0]))     
-        
+                printed_pages=int(printed_pages_all_oid[0]))
+
         dataset.append(
             [
                 data_printers_in_service.service_object,            #0
@@ -1618,11 +1832,11 @@ def service_object_printed_pages_bb_list_view(request):
 
             ]
                     )
-    
+
     # print("+"*35)
     # for data in dataset:
     #     print(data)
-    # print("-"*35)  
+    # print("-"*35)
 
     name_colomns = [
                     'Объект_обслуживания',
@@ -1636,9 +1850,9 @@ def service_object_printed_pages_bb_list_view(request):
                     'S/N (oid)',
                     'Распечатано страниц (всего)',
                     'Дата формирования',
-                    'Ошибки формирования', 
+                    'Ошибки формирования',
                     ]
-    
+
     name_file='printed_pages_list'
 
 
@@ -1649,7 +1863,7 @@ def service_object_printed_pages_bb_list_view(request):
             'dataset_count': len(dataset),
             # 'url_export_csv':'export_csv',
             # 'url_export_csv':'service_object_list',
-            'name_colomns': name_colomns,      
+            'name_colomns': name_colomns,
             'name_file': name_file,
         }
 
@@ -1657,10 +1871,10 @@ def service_object_printed_pages_bb_list_view(request):
 
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-def service_object_printed_pages_bmk_list_view(request):    
+def service_object_printed_pages_bmk_list_view(request):
     form = Printed_pagesForm()
 
-    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания   
+    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
     dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False).exclude(service_object__service_object_name="ББ")
 
 
@@ -1668,15 +1882,15 @@ def service_object_printed_pages_bmk_list_view(request):
 
     title_text = "Распечатано страниц"
 
-    dataset = []    
+    dataset = []
 
     # print("+"*35)
     # print(dataset_printers_in_service)
     # print("-"*35)
 
 
-    for data_printers_in_service in dataset_printers_in_service:        
-        
+    for data_printers_in_service in dataset_printers_in_service:
+
         sn_oid = get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.sn_oid.oid),                     #8
         printed_pages_all_oid = get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.printed_pages_all_oid.oid),      #9
 
@@ -1687,12 +1901,12 @@ def service_object_printed_pages_bmk_list_view(request):
             errors += 'S/N не равны| '
         if printed_pages_all_oid[0] == 0 or printed_pages_all_oid[0] == '' or printed_pages_all_oid[0] == None or printed_pages_all_oid[0] =='\x00\x00\x00\x00':
             errors += 'printed_pages_error|'
-            
-        # если ошибок нет, записисываем данные в БД    
-        if errors == "":            
-            # Printed_pagesModel.objects.create(printers_in_service=data_printers_in_service, printed_pages=int(printed_pages_all_oid[0]))    
+
+        # если ошибок нет, записисываем данные в БД
+        if errors == "":
+            # Printed_pagesModel.objects.create(printers_in_service=data_printers_in_service, printed_pages=int(printed_pages_all_oid[0]))
             Printed_pagesModel.objects.create(
-                printers_in_service=data_printers_in_service.id, 
+                printers_in_service=data_printers_in_service.id,
 
                 service_object_name=data_printers_in_service.service_object.service_object_name,
                 printers_name=data_printers_in_service.printers.name,
@@ -1701,8 +1915,8 @@ def service_object_printed_pages_bmk_list_view(request):
                 name_on_print_server = data_printers_in_service.name_on_print_server,
                 location = data_printers_in_service.location,
 
-                printed_pages=int(printed_pages_all_oid[0]))    
-        
+                printed_pages=int(printed_pages_all_oid[0]))
+
         dataset.append(
             [
                 data_printers_in_service.service_object,            #0
@@ -1720,11 +1934,11 @@ def service_object_printed_pages_bmk_list_view(request):
 
             ]
                     )
-    
+
     # print("+"*35)
     # for data in dataset:
     #     print(data)
-    # print("-"*35)  
+    # print("-"*35)
 
     name_colomns = [
                     'Объект_обслуживания',
@@ -1738,9 +1952,9 @@ def service_object_printed_pages_bmk_list_view(request):
                     'S/N (oid)',
                     'Распечатано страниц (всего)',
                     'Дата формирования',
-                    'Ошибки формирования', 
+                    'Ошибки формирования',
                     ]
-    
+
     name_file='printed_pages_list'
 
 
@@ -1751,7 +1965,7 @@ def service_object_printed_pages_bmk_list_view(request):
             'dataset_count': len(dataset),
             # 'url_export_csv':'export_csv',
             # 'url_export_csv':'service_object_list',
-            'name_colomns': name_colomns,      
+            'name_colomns': name_colomns,
             'name_file': name_file,
         }
 
@@ -1775,7 +1989,7 @@ def printed_pages_list_view(request):
             'title_text':title_text,
             # 'url_return_to_the_list':'service_object_list',
         }
-    
+
     return render(request, 'printers/printed_pages_listview.html', context)
 
 
@@ -1784,26 +1998,26 @@ def printed_pages_list_view(request):
 def export_printed_pages_xls(request):
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename="printed_pages.xls"'
- 
+
     wb = xlwt.Workbook(encoding='utf-8')
     ws = wb.add_sheet('printed_pages')
- 
+
     # Sheet header, first row
     row_num = 0
- 
+
     font_style = xlwt.XFStyle()
     font_style.font.bold = True
- 
+
     # columns = ['Объект обслуживания', 'Модель принтера', 'S/N', 'IP-address', 'Имя на Print-server', 'Дата формирования', 'Распечатано страниц', ]
-    columns = ['id', 'id объекта обслуживания', 'Объект обслуживания', 'Модель принтера', 
+    columns = ['id', 'id объекта обслуживания', 'Объект обслуживания', 'Модель принтера',
                     'S/N', 'IP-address', 'Имя на Print-server', 'Локация/Кабинет', 'Дата формирования', 'Распечатано страниц', ]
- 
+
     for col_num in range(len(columns)):
         ws.write(row_num, col_num, columns[col_num], font_style)
- 
+
     # Sheet body, remaining rows
     font_style = xlwt.XFStyle()
-    
+
     rows = []
     dataset = Printed_pagesModel.objects.all()
     for row in dataset:
@@ -1811,8 +2025,8 @@ def export_printed_pages_xls(request):
             [
                 row.id,
                 row.printers_in_service,
-                row.service_object_name, 
-                row.printers_name, 
+                row.service_object_name,
+                row.printers_name,
                 row.serial_number,
                 row.ip_address,
                 row.name_on_print_server,
@@ -1821,24 +2035,24 @@ def export_printed_pages_xls(request):
                 row.printed_pages,
             ]
         )
-    
 
-    
- 
-    # rows = Printed_pagesModel.objects.all().values_list('printers_in_service.service_object.service_object_name', 
-    #                                                     'printers_in_service.printers.name', 
+
+
+
+    # rows = Printed_pagesModel.objects.all().values_list('printers_in_service.service_object.service_object_name',
+    #                                                     'printers_in_service.printers.name',
     #                                                     'printers_in_service.serial_number',
     #                                                     'printers_in_service.ip_address',
     #                                                     'created',
     #                                                     'printed_pages')
-    
+
     rows = [[x.strftime("%Y-%m-%d %H:%M") if isinstance(x, datetime.datetime) else x for x in row] for row in rows ]
-    
+
     for row in rows:
         row_num += 1
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num], font_style)
- 
+
     wb.save(response)
     return response
 
@@ -1864,8 +2078,3 @@ def export_printed_pages_xls(request):
 #             'url_return_to_the_list':'service_object_list',
 #         }
 #         return render(request, 'printers/create.html', context)
-
-
-
-
-
