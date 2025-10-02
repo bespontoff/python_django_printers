@@ -3,7 +3,15 @@ from celery import shared_task
 # from time import sleep
 import datetime
 
+from celery.utils.log import get_task_logger
+
 from easysnmp import snmp_get
+
+
+
+logger = get_task_logger(__name__)
+
+
 
 # @shared_task
 # def send_welcome_email(user_id):
@@ -194,3 +202,28 @@ def get_data_by_oid(ip, sn_oid, printed_pages_all_oid, id_printer):
 
     except Exception as ex:
         return f"Ошибка выполнения функции async_get_data_by_oid(ip, sn_oid, printed_pages_all_oid, id_printer): {ex}"
+
+
+def task_service_object_printed_pages():
+
+    # from tasks import get_data_by_oid
+    from printers.models import Printers_in_serviceModel
+
+    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
+    # dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False).filter(service_object_id=id)
+    dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False)
+
+    for data_printers_in_service in dataset_printers_in_service:
+        # Запускаем асинхронную задачу
+        get_data_by_oid.delay(data_printers_in_service.ip_address,
+                                data_printers_in_service.printers.sn_oid.oid,
+                                data_printers_in_service.printers.printed_pages_all_oid.oid,
+                                data_printers_in_service.id)
+
+
+@shared_task
+def sample_task():
+
+    task_service_object_printed_pages()
+
+    logger.info("The \"task_service_object_printed_pages\" just run")

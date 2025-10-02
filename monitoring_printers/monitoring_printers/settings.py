@@ -19,6 +19,10 @@ from django_auth_ldap.config import LDAPSearch, LDAPGroupQuery, GroupOfNamesType
 import logging
 from decouple import config
 
+from celery.schedules import crontab
+
+import printers.tasks
+
 
 logger = logging.getLogger('django_auth_ldap')
 logger.addHandler(logging.StreamHandler())
@@ -61,6 +65,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'widget_tweaks',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -255,3 +260,12 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Europe/Moscow'
+
+CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
+
+CELERY_BEAT_SCHEDULE = {
+    "sample_task": {
+        "task": "printers.tasks.sample_task",
+        "schedule": crontab(minute="*/1440"),
+    },
+}

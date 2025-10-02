@@ -32,6 +32,8 @@ def snmp_get(oid="oid", hostname="ip", community='public', version=1):
 
 
 
+
+
 # ***********************************************************************************************************************************************************
 # Распечатано страниц (принтеры/МФУ)
 
@@ -1613,42 +1615,6 @@ def async_service_object_printed_pages_list_view_all(request):
         }
     # return render(request, 'printers/service_object_listview.html', context=context)
     return render(request, 'printers/printed_pages_listview.html', context)
-
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-def async_service_object_printed_pages_list_view_all_time(request):
-
-    from .tasks import get_data_by_oid
-
-    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
-    # dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False).filter(service_object_id=id)
-    dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False)
-
-    for data_printers_in_service in dataset_printers_in_service:
-        # Запускаем асинхронную задачу
-        get_data_by_oid.delay(data_printers_in_service.ip_address,
-                                        data_printers_in_service.printers.sn_oid.oid,
-                                        data_printers_in_service.printers.printed_pages_all_oid.oid,
-                                        data_printers_in_service.id)
-
-
-
-
-    dataset = Printed_pagesModel.objects.all().order_by('-created')[:500]
-    # dataset = Printed_pagesModel.objects.all().order_by('-created')[:100]
-    title_text = "Распечатано страниц"
-
-
-    context = {
-            'dataset': dataset,
-            'user_login': request.user,
-            'title_text':title_text,
-            'priznak':'all',
-            # 'url_return_to_the_list':'reestr_tmts_list',
-        }
-    # return render(request, 'printers/service_object_listview.html', context=context)
-    return render(request, 'printers/printed_pages_listview.html', context)
-
-
 
 
 
