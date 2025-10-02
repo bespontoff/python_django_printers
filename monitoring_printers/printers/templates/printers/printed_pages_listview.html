@@ -4,18 +4,18 @@
 
 {% block header %}{{ title_text }}, [последние {{ dataset.count }} записей в БД]{% endblock header %}
 
-{% block body %}    
+{% block body %}
 
-    <div class="container-fluid bg-body-tertiary rounded my-3 py-3">       
-        <a class="btn btn-lg btn-success" href="{% url 'export_users_xls'%}" role="button">Экспортировать все записи из БД в xls  &raquo;</a> 
+    <div class="container-fluid bg-body-tertiary rounded my-3 py-3">
+        <a class="btn btn-lg btn-success" href="{% url 'export_users_xls'%}" role="button">Экспортировать все записи из БД в xls  &raquo;</a>
     </div>
 
     <div class="container-fluid bg-body-tertiary my-3 py-3">
     <!-- <div class="container-fluid bg-light text-white text-start my-2 py-4"> -->
-        {% if dataset.count > 0 %}                
+        {% if dataset.count > 0 %}
             <table class="table table-striped table-bordered text-start">
                 <thead>
-                    <tr>                        
+                    <tr>
                         <th>№</th>
                         <th>№ объекта_обслуживания</th>
                         <th>Объект обслуживания</th>
@@ -26,6 +26,7 @@
                         <th>Локация/Кабинет</th>
                         <th>Дата формирования</th>
                         <th>Распечатано страниц</th>
+                        <th>Ошибки</th>
                         {% comment %}
                             <th>Действия над записями</th>
                         {% endcomment %}
@@ -44,8 +45,9 @@
                             <td>{{ data.location }}</td>
                             <td>{{ data.created }}</td>
                             <td>{{ data.printed_pages }}</td>
+                            <td>{{ data.error_message }}</td>
                             {% comment %}
-                                <td>                                    
+                                <td>
                                     <a class="btn btn-sm btn-warning" href="{% url 'print_servers_update' id=data.id %}">Изменить  &raquo;</a>
                                     <a class="btn btn-sm btn-danger" href="{% url 'print_servers_delete' id=data.id %}">Удалить  &raquo;</a>
                                 </td>
@@ -58,14 +60,14 @@
             </table>
         {% else %}
             <h2>Реестр "{{ title_text }}" пуст</h2>
-        {% endif %}        
+        {% endif %}
     </div>
 
     {% comment %}
         <div class="container-fluid bg-body-tertiary rounded my-3 py-3">
-            <h5>Добавить новую запись</h5>        
+            <h5>Добавить новую запись</h5>
             <a class="btn btn-lg btn-success" href="{% url 'print_servers_create' %}" role="button">Добавить &raquo;</a>
         </div>
-    {% endcomment %}   
+    {% endcomment %}
 
 {% endblock body %}

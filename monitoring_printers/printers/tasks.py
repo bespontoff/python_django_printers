@@ -108,6 +108,28 @@ from easysnmp import snmp_get
 
 
 
+def  printed_pagesModel_objects_create(id, service_object_name, printers_name, serial_number, ip_address,
+                                        name_on_print_server, location, printed_pages, error_message):
+
+    from printers.models import Printed_pagesModel  # Импортируем здесь для избежания циклических импортов
+
+    try:
+        # записисываем данные в БД
+        Printed_pagesModel.objects.create(
+                    printers_in_service = id,
+                    service_object_name = service_object_name,
+                    printers_name = printers_name,
+                    serial_number = serial_number,
+                    ip_address = ip_address,
+                    name_on_print_server = name_on_print_server,
+                    location = location,
+                    printed_pages = printed_pages,
+                    error_message = error_message
+                    )
+    except Exception as ex:
+        return f"Ошибка записи Printed_pagesModel функцией printed_pagesModel_objects_create(...): {ex}"
+
+
 
 @shared_task
 def get_data_by_oid(ip, sn_oid, printed_pages_all_oid, id_printer):
@@ -115,53 +137,60 @@ def get_data_by_oid(ip, sn_oid, printed_pages_all_oid, id_printer):
         from printers.models import Printed_pagesModel  # Импортируем здесь для избежания циклических импортов
         from printers.models import Printers_in_serviceModel  # Импортируем здесь для избежания циклических импортов
 
-        # print("+"*35)
-        # print("Start_tasks - datetime: ", datetime.datetime.now())
-        # print(str(ip) + " | " + str(sn_oid) + " | " + str(printed_pages_all_oid) + " | " + str(id_printer))
-        # print("+"*35)
-
         # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
         data_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False).filter(id=id_printer)
 
-        # # sn_oid = get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.sn_oid.oid) #8
-        response_sn_oid = snmp_get(sn_oid, hostname=ip, community='public', version=1)
-        result_sn = response_sn_oid.value#[0]
+        try:
+            # # sn_oid = get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.sn_oid.oid) #8
+            response_sn_oid = snmp_get(sn_oid, hostname=ip, community='public', version=1)
+            result_sn = response_sn_oid.value#[0]
 
-        # # printed_pages_all_oid = get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.printed_pages_all_oid.oid)   #9
-        response_printed_pages_all_oid = snmp_get(printed_pages_all_oid, hostname=ip, community='public', version=1)
-        result_response_printed_pages_all = response_printed_pages_all_oid.value#[0]
+            # # printed_pages_all_oid = get_data_by_oid(data_printers_in_service.ip_address, data_printers_in_service.printers.printed_pages_all_oid.oid)   #9
+            response_printed_pages_all_oid = snmp_get(printed_pages_all_oid, hostname=ip, community='public', version=1)
+            result_response_printed_pages_all = response_printed_pages_all_oid.value#[0]
+
+        except Exception as ex:
+
+            printed_pagesModel_objects_create(
+                data_printers_in_service[0].id,#printers_in_service =
+                data_printers_in_service[0].service_object.service_object_name,#service_object_name =
+                data_printers_in_service[0].printers.name,#printers_name =
+                data_printers_in_service[0].serial_number,#serial_number =
+                data_printers_in_service[0].ip_address,#ip_address =
+                data_printers_in_service[0].name_on_print_server,#name_on_print_server =
+                data_printers_in_service[0].location,#location =
+                0,#printed_pages =
+                error_message = "snmp_get errors (ошибка получения данных)"
+                )
+
+            return f"Ошибка snmp_get(sn_oid, hostname=ip, community='public', version=1) функции async_get_data_by_oid(ip, sn_oid, printed_pages_all_oid, id_printer): {ex}"
 
         # print("result_sn: ", result_sn, "| result_response_printed_pages_all: ", result_response_printed_pages_all)
 
         # проверяем корректность данных
         errors = ""
-
         if data_printers_in_service[0].serial_number != result_sn:
-            errors += 'S/N не равны| '
+            errors += f'S/N не равны (S/N oid {result_sn})| '
         if data_printers_in_service[0].ip_address != ip:
-            errors += 'ip не равны| '
+            errors += f'ip не равны (S/N oid {ip})| '
         if result_response_printed_pages_all == 0 or result_response_printed_pages_all == '' or result_response_printed_pages_all == None or result_response_printed_pages_all =='\x00\x00\x00\x00':
-            errors += 'printed_pages_error|'
+            errors += 'ошибка получения данных|'
+            result_response_printed_pages_all=0
 
-        # если ошибок нет, записисываем данные в БД
-        if errors == "":
-            Printed_pagesModel.objects.create(
-                printers_in_service = data_printers_in_service[0].id,
-                service_object_name = data_printers_in_service[0].service_object.service_object_name,
-                printers_name = data_printers_in_service[0].printers.name,
-                serial_number = data_printers_in_service[0].serial_number,
-                ip_address = data_printers_in_service[0].ip_address,
-                name_on_print_server = data_printers_in_service[0].name_on_print_server,
-                location = data_printers_in_service[0].location,
 
-                printed_pages = int(result_response_printed_pages_all) #int(printed_pages_all_oid[0]))
+        printed_pagesModel_objects_create(
+                data_printers_in_service[0].id,#printers_in_service =
+                data_printers_in_service[0].service_object.service_object_name,#service_object_name =
+                data_printers_in_service[0].printers.name,#printers_name =
+                data_printers_in_service[0].serial_number,#serial_number =
+                data_printers_in_service[0].ip_address,#ip_address =
+                data_printers_in_service[0].name_on_print_server,#name_on_print_server =
+                data_printers_in_service[0].location,#location =
+                printed_pages = int(result_response_printed_pages_all), #int(printed_pages_all_oid[0]))
+                error_message = errors
                 )
 
-        # print("+"*35)
-        # print("End_tasks - datetime: ", datetime.datetime.now())
-        # print("+"*35)
-
-        return str(result_sn) + " | " + str(result_response_printed_pages_all) + " ||| " + errors + " ||| " + str(ip) + " | " + str(sn_oid)+ " | " + str(printed_pages_all_oid)+ " | " + str(id_printer) + " ||| " + str(data_printers_in_service[0])
+        # return str(result_sn) + " | " + str(result_response_printed_pages_all) + " ||| " + errors + " ||| " + str(ip) + " | " + str(sn_oid)+ " | " + str(printed_pages_all_oid)+ " | " + str(id_printer) + " ||| " + str(data_printers_in_service[0])
 
     except Exception as ex:
         return f"Ошибка выполнения функции async_get_data_by_oid(ip, sn_oid, printed_pages_all_oid, id_printer): {ex}"

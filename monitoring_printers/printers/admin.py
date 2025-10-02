@@ -7,7 +7,7 @@ from .admin_mixins import ExportAsCSVMixin
 
 @admin.register(StatusPrintersModel)
 class StatusPrintersAdmin(admin.ModelAdmin, ExportAsCSVMixin):
-    actions = [        
+    actions = [
         'export_csv',
     ]
 
@@ -20,7 +20,7 @@ class StatusPrintersAdmin(admin.ModelAdmin, ExportAsCSVMixin):
 
 @admin.register(Print_serversModel)
 class Print_serversAdmin(admin.ModelAdmin, ExportAsCSVMixin):
-    actions = [        
+    actions = [
         'export_csv',
     ]
 
@@ -33,7 +33,7 @@ class Print_serversAdmin(admin.ModelAdmin, ExportAsCSVMixin):
 
 @admin.register(CartridgesModel)
 class CartridgesAdmin(admin.ModelAdmin, ExportAsCSVMixin):
-    actions = [        
+    actions = [
         'export_csv',
     ]
 
@@ -46,7 +46,7 @@ class CartridgesAdmin(admin.ModelAdmin, ExportAsCSVMixin):
 
 @admin.register(PrintersModel)
 class PrintersAdmin(admin.ModelAdmin, ExportAsCSVMixin):
-    actions = [        
+    actions = [
         'export_csv',
     ]
 
@@ -57,17 +57,17 @@ class PrintersAdmin(admin.ModelAdmin, ExportAsCSVMixin):
     list_filter = ['name', 'cartridges', 'printed_pages_all_oid',]
     search_fields = ('id', 'name', 'cartridges__name', 'sn_oid__oid', 'printed_pages_all_oid__oid',)
     ordering = ('name',)
-    
+
     def _cartridges(self, row):
         return ', '.join([x.name for x in row.cartridges.all()])
-    
+
     def queryset(self, request):
         return PrintersModel.objects.select_related("Cartridges")
-   
+
 
 @admin.register(Type_OIDModel)
 class Type_OIDAdmin(admin.ModelAdmin, ExportAsCSVMixin):
-    actions = [        
+    actions = [
         'export_csv',
     ]
 
@@ -80,7 +80,7 @@ class Type_OIDAdmin(admin.ModelAdmin, ExportAsCSVMixin):
 
 @admin.register(SNMP_OIDModel)
 class SNMP_OIDAdmin(admin.ModelAdmin, ExportAsCSVMixin):
-    actions = [        
+    actions = [
         'export_csv',
     ]
 
@@ -105,7 +105,7 @@ def printers_unarchived(modeladmin: admin.ModelAdmin, request: HttpRequest, quer
 
 class Printers_in_service_commentsInline(admin.TabularInline):   # добавляем в Printers_in_serviceAdmin поля из Printers_in_service_comments
     model = Printers_in_service_commentsModel
-    readonly_fields = ('id', 'created', 'updated')    
+    readonly_fields = ('id', 'created', 'updated')
     extra = 1 # Это определяет, сколько еще форм, в дополнение к начальным формам, отображается в наборе форм. по умолчанию до 3
     # # fk_name = 'printers_comments'
 
@@ -135,16 +135,16 @@ class Printers_in_serviceAdmin(admin.ModelAdmin, ExportAsCSVMixin):
     # # группировка полей в админке
     # fieldsets = [
     #     ('Namesection1', {"fields":('serial_number', 'printers',)}),
-    #     ('Namesection2', 
+    #     ('Namesection2',
     #         {"fields": ('status_printer', 'print_server', 'name_on_print_server', 'ip_address', 'location',),
     #          'classes': ('wide', 'collapse',),}),  # параметр 'collapse' позволяет скрывать секцию, 'wide' - смещение полей
     #     ('Extra options', {
     #         "fields": ('archived',),
     #         'classes': ('collapse',),
     #         'description': 'Extra options. Field "archived" is for soft delete',
-    #     }),             
+    #     }),
     # ]
-    
+
 
     # '_short_comments'
 
@@ -160,7 +160,7 @@ class Printers_in_serviceAdmin(admin.ModelAdmin, ExportAsCSVMixin):
 
 @admin.register(Printers_in_service_commentsModel)
 class Printers_in_service_commentsAdmin(admin.ModelAdmin, ExportAsCSVMixin):
-    actions = [        
+    actions = [
         'export_csv',
     ]
 
@@ -177,7 +177,7 @@ class Printers_in_service_commentsAdmin(admin.ModelAdmin, ExportAsCSVMixin):
 
 @admin.register(Service_objectModel)
 class Service_objectAdmin(admin.ModelAdmin, ExportAsCSVMixin):
-    actions = [        
+    actions = [
         'export_csv',
     ]
 
@@ -190,15 +190,12 @@ class Service_objectAdmin(admin.ModelAdmin, ExportAsCSVMixin):
 
 @admin.register(Printed_pagesModel)
 class Printed_pagesAdmin(admin.ModelAdmin, ExportAsCSVMixin):
-    actions = [        
+    actions = [
         'export_csv',
     ]
-    list_display = ('id', 'printers_in_service', 'service_object_name', 'printers_name', 
-                    'serial_number', 'ip_address', 'name_on_print_server', 'location', 'created', 'printed_pages', )
+    list_display = ('id', 'printers_in_service', 'service_object_name', 'printers_name',
+                    'serial_number', 'ip_address', 'name_on_print_server', 'location', 'created', 'printed_pages', 'error_message', )
     list_display_links = ('printers_in_service',)
-    search_fields = ('printers_in_service', 'service_object_name', 'printers_name', 
-                     'serial_number', 'ip_address', 'name_on_print_server', 'location', 'created', 'printed_pages', )
+    search_fields = ('printers_in_service', 'service_object_name', 'printers_name',
+                     'serial_number', 'ip_address', 'name_on_print_server', 'location', 'created', 'printed_pages', 'error_message', )
     ordering = ('created',)
-
-
-    

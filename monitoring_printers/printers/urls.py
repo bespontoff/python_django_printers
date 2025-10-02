@@ -87,7 +87,13 @@ urlpatterns = [
     path('service_object_export_printed_pages_xls/<int:id>/', service_object_export_printed_pages_xls, name='service_object_export_printed_pages_xls'),
     path('service_object_printed_pages_list_view/<int:id>/', service_object_printed_pages_list_view, name='service_object_printed_pages_list_view'),
 
+    # Асинхронный метод сбора данных по принтерам по id площадки (объекта обслуживания)
     path('async_service_object_printed_pages_list_view/<int:id>/', async_service_object_printed_pages_list_view, name='async_service_object_printed_pages_list_view'),
+
+
+
+    path('async_service_object_printed_pages_list_view_all/', async_service_object_printed_pages_list_view_all, name='async_service_object_printed_pages_list_view_all'),
+    path('async_service_object_printed_pages_list_view_all_time/', async_service_object_printed_pages_list_view_all_time, name='async_service_object_printed_pages_list_view_all_time'),
 
 
 

@@ -1060,7 +1060,9 @@ def service_object_export_printed_pages_xls(request, id):
                 name_on_print_server = data_printers_in_service.name_on_print_server,
                 location = data_printers_in_service.location,
 
-                printed_pages=int(printed_pages_all_oid[0]))
+                printed_pages=int(printed_pages_all_oid[0]),
+
+                error_message = "")
 
         rows.append(
             [
@@ -1177,7 +1179,9 @@ def service_object_all_export_printed_pages_xls(request):
                 name_on_print_server = data_printers_in_service.name_on_print_server,
                 location = data_printers_in_service.location,
 
-                printed_pages=int(printed_pages_all_oid[0]))
+                printed_pages=int(printed_pages_all_oid[0]),
+
+                error_message = "")
 
         rows.append(
             [
@@ -1294,7 +1298,9 @@ def service_object_all_export_printed_pages_xls_bb(request):
                 name_on_print_server = data_printers_in_service.name_on_print_server,
                 location = data_printers_in_service.location,
 
-                printed_pages=int(printed_pages_all_oid[0]))
+                printed_pages=int(printed_pages_all_oid[0]),
+
+                error_message = "")
 
         rows.append(
             [
@@ -1411,7 +1417,8 @@ def service_object_all_export_printed_pages_xls_bmk(request):
                 name_on_print_server = data_printers_in_service.name_on_print_server,
                 location = data_printers_in_service.location,
 
-                printed_pages=int(printed_pages_all_oid[0]))
+                printed_pages=int(printed_pages_all_oid[0]),
+                error_message = "")
 
         rows.append(
             [
@@ -1475,6 +1482,7 @@ def async_service_object_printed_pages_list_view(request, id):
 
     # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
     dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False).filter(service_object_id=id)
+    #dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False)
 
     for data_printers_in_service in dataset_printers_in_service:
         # Запускаем асинхронную задачу
@@ -1531,6 +1539,115 @@ def async_service_object_printed_pages_list_view(request, id):
             # 'url_return_to_the_list':'reestr_tmts_list',
         }
     return render(request, 'printers/service_object_listview.html', context=context)
+
+
+
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+def async_service_object_printed_pages_list_view_all(request):
+
+    from .tasks import get_data_by_oid
+
+    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
+    # dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False).filter(service_object_id=id)
+    dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False)
+
+    for data_printers_in_service in dataset_printers_in_service:
+        # Запускаем асинхронную задачу
+        get_data_by_oid.delay(data_printers_in_service.ip_address,
+                                        data_printers_in_service.printers.sn_oid.oid,
+                                        data_printers_in_service.printers.printed_pages_all_oid.oid,
+                                        data_printers_in_service.id)
+
+
+
+    # id_printers_massive = []
+    # for data_printers_in_service in dataset_printers_in_service:
+    #     id_printers_massive.append(data_printers_in_service.id)
+
+    # # print(id_printers_massive)
+
+    # for id_printer in id_printers_massive:
+    #     try:
+
+    #         # data_printers_in_service = Printed_pagesModel.objects.filter(printers_in_service=data_printers_in_service.id).latest('created')
+    #         data_printers_in_service = Printed_pagesModel.objects.filter(printers_in_service=id_printer).latest('created')
+
+    #         if data_printers_in_service == None:
+    #             continue
+
+    #         print(
+    #                 str(data_printers_in_service.id)\
+    #                 + ' | ' + str(data_printers_in_service.printers_in_service)\
+    #                 + ' | ' + str(data_printers_in_service.service_object_name) \
+    #                 + ' | ' + str(data_printers_in_service.printers_name) \
+    #                 + ' | ' + str(data_printers_in_service.serial_number) \
+    #                 + ' | ' + str(data_printers_in_service.ip_address) \
+    #                 + ' | ' + str(data_printers_in_service.name_on_print_server) \
+    #                 + ' | ' + str(data_printers_in_service.location) \
+    #                 + ' | ' + str(data_printers_in_service.created) \
+    #                 + ' | ' + str(data_printers_in_service.printed_pages)
+    #             )
+
+    #     except Exception as ex:
+    #         print(f"Ошибка выполнения функции async_service_object_printed_pages_list_view(request, id): {ex} ||| id_printer: {id_printer}")
+    #         continue
+
+
+    # Переходим на главную страницу, пока выполняются запросы
+    # Получаем все записи
+    # dataset = Service_objectModel.objects.all()
+    # title_text = "Объекты_обслуживания"
+
+
+    dataset = Printed_pagesModel.objects.all().order_by('-created')[:500]
+    # dataset = Printed_pagesModel.objects.all().order_by('-created')[:100]
+    title_text = "Распечатано страниц"
+
+
+    context = {
+            'dataset': dataset,
+            'user_login': request.user,
+            'title_text':title_text,
+            'priznak':'all',
+            # 'url_return_to_the_list':'reestr_tmts_list',
+        }
+    # return render(request, 'printers/service_object_listview.html', context=context)
+    return render(request, 'printers/printed_pages_listview.html', context)
+
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+def async_service_object_printed_pages_list_view_all_time(request):
+
+    from .tasks import get_data_by_oid
+
+    # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
+    # dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False).filter(service_object_id=id)
+    dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False)
+
+    for data_printers_in_service in dataset_printers_in_service:
+        # Запускаем асинхронную задачу
+        get_data_by_oid.delay(data_printers_in_service.ip_address,
+                                        data_printers_in_service.printers.sn_oid.oid,
+                                        data_printers_in_service.printers.printed_pages_all_oid.oid,
+                                        data_printers_in_service.id)
+
+
+
+
+    dataset = Printed_pagesModel.objects.all().order_by('-created')[:500]
+    # dataset = Printed_pagesModel.objects.all().order_by('-created')[:100]
+    title_text = "Распечатано страниц"
+
+
+    context = {
+            'dataset': dataset,
+            'user_login': request.user,
+            'title_text':title_text,
+            'priznak':'all',
+            # 'url_return_to_the_list':'reestr_tmts_list',
+        }
+    # return render(request, 'printers/service_object_listview.html', context=context)
+    return render(request, 'printers/printed_pages_listview.html', context)
+
 
 
 
@@ -1607,7 +1724,9 @@ def service_object_printed_pages_list_view(request, id):
                 name_on_print_server = data_printers_in_service.name_on_print_server,
                 location = data_printers_in_service.location,
 
-                printed_pages=int(printed_pages_all_oid[0]))
+                printed_pages=int(printed_pages_all_oid[0]),
+
+                error_message = "")
 
         dataset.append(
             [
@@ -1711,7 +1830,9 @@ def service_object_printed_pages_all_list_view(request):
                 name_on_print_server = data_printers_in_service.name_on_print_server,
                 location = data_printers_in_service.location,
 
-                printed_pages=int(printed_pages_all_oid[0]))
+                printed_pages=int(printed_pages_all_oid[0]),
+
+                error_message = "")
 
         dataset.append(
             [
@@ -1813,7 +1934,9 @@ def service_object_printed_pages_bb_list_view(request):
                 name_on_print_server = data_printers_in_service.name_on_print_server,
                 location = data_printers_in_service.location,
 
-                printed_pages=int(printed_pages_all_oid[0]))
+                printed_pages=int(printed_pages_all_oid[0]),
+
+                error_message = "")
 
         dataset.append(
             [
@@ -1915,7 +2038,9 @@ def service_object_printed_pages_bmk_list_view(request):
                 name_on_print_server = data_printers_in_service.name_on_print_server,
                 location = data_printers_in_service.location,
 
-                printed_pages=int(printed_pages_all_oid[0]))
+                printed_pages=int(printed_pages_all_oid[0]),
+
+                error_message = "")
 
         dataset.append(
             [
