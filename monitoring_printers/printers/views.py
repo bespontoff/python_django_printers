@@ -1616,6 +1616,27 @@ def async_service_object_printed_pages_list_view_all(request):
     # return render(request, 'printers/service_object_listview.html', context=context)
     return render(request, 'printers/printed_pages_listview.html', context)
 
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+def printed_pages_list_view_all_last(request):
+
+    # dataset = Printed_pagesModel.objects.last()
+
+    count_printers = Printers_in_serviceModel.objects.count()
+
+    dataset = Printed_pagesModel.objects.all().order_by('-created')[:count_printers]
+    title_text = "Распечатано страниц"
+
+
+    context = {
+            'dataset': dataset,
+            'user_login': request.user,
+            'title_text':title_text,
+            'priznak':'all',
+            # 'url_return_to_the_list':'reestr_tmts_list',
+        }
+
+    return render(request, 'printers/printed_pages_listview.html', context)
+
 
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

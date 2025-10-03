@@ -265,7 +265,11 @@ CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
 
 CELERY_BEAT_SCHEDULE = {
     "sample_task": {
-        "task": "printers.tasks.sample_task",
-        "schedule": crontab(minute="*/1440"),
+        "task": "printers.tasks.printers_task",
+        "schedule": crontab(hour=15, minute=0),
+    },
+    "sample_task_2": {
+        "task": "printers.tasks.printers_task",
+        "schedule": crontab(hour=9, minute=0),
     },
 }

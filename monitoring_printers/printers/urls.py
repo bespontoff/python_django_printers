@@ -93,6 +93,7 @@ urlpatterns = [
 
 
     path('async_service_object_printed_pages_list_view_all/', async_service_object_printed_pages_list_view_all, name='async_service_object_printed_pages_list_view_all'),
+    path('printed_pages_list_view_all_last/', printed_pages_list_view_all_last, name='printed_pages_list_view_all_last'),
 
 
 

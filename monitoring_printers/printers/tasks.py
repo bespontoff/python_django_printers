@@ -222,7 +222,7 @@ def task_service_object_printed_pages():
 
 
 @shared_task
-def sample_task():
+def printers_task():
 
     task_service_object_printed_pages()
 
