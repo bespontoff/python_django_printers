@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('', include('printers.urls')), # главная страница, в т.ч. LOGIN_REDIRECT_URL
+    path('', include('printers.urls')),  # главная страница, в т.ч. LOGIN_REDIRECT_URL
     path('printers/', include('printers.urls')),
     path('admin/', admin.site.urls),
     path('users/', include('app_auth_users.urls')),

@@ -23,17 +23,13 @@ from celery.schedules import crontab
 
 import printers.tasks
 
-
 logger = logging.getLogger('django_auth_ldap')
 logger.addHandler(logging.StreamHandler())
 # logger.setLevel(logging.WARNING)
 logger.setLevel(logging.DEBUG)
 
-
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -44,8 +40,7 @@ SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", cast=bool)
 
-ALLOWED_HOSTS = [config("HOST_IP"), '127.0.0.1']
-
+ALLOWED_HOSTS = ['*']  # [config("HOST_IP"), '127.0.0.1']
 
 # Application definition
 
@@ -56,10 +51,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'printers.apps.PrintersConfig', # приложение можно поставить в начало списка, чтобы template брались в первую очередь из его раздела
+    'printers.apps.PrintersConfig',
+    # приложение можно поставить в начало списка, чтобы template брались в первую очередь из его раздела
     'app_auth_users.apps.AppAuthUsersConfig',
 
-    'django_dyn_dt', # <-- NEW App
+    'django_dyn_dt',  # <-- NEW App
     'django_tables2',
     'django_select2',
     'crispy_forms',
@@ -85,7 +81,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'monitoring_printers.urls'
 
-TEMPLATE_DIR_DATATB = os.path.join(BASE_DIR, "django_dyn_dt/templates") # <-- NEW App
+TEMPLATE_DIR_DATATB = os.path.join(BASE_DIR, "django_dyn_dt/templates")  # <-- NEW App
 
 TEMPLATES = [
     {
@@ -108,7 +104,6 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 WSGI_APPLICATION = 'monitoring_printers.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
@@ -118,7 +113,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -138,7 +132,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -151,7 +144,6 @@ TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
@@ -169,10 +161,7 @@ STATICFILES_DIRS = [
 
 LOGIN_REDIRECT_URL = '/'
 
-
-
-
-
+# LDAP
 LDAP_IGNORE_CERT_ERRORS = True
 AUTH_LDAP_START_TLS = False
 
@@ -186,21 +175,21 @@ AUTH_LDAP_BIND_DN = config("AUTH_LDAP_BIND_DN")
 AUTH_LDAP_BIND_PASSWORD = config("AUTH_LDAP_BIND_PASSWORD")
 
 AUTH_LDAP_USER_SEARCH = LDAPSearchUnion(
-    LDAPSearch(config("AUTH_LDAP_USER_SEARCH_LDAPSearch1"),ldap.SCOPE_SUBTREE, "(sAMAccountName=%(user)s)"),
-    LDAPSearch(config("AUTH_LDAP_USER_SEARCH_LDAPSearch2"),ldap.SCOPE_SUBTREE, "(sAMAccountName=%(user)s)"),
+    LDAPSearch(config("AUTH_LDAP_USER_SEARCH_LDAPSearch1"), ldap.SCOPE_SUBTREE, "(sAMAccountName=%(user)s)"),
+    LDAPSearch(config("AUTH_LDAP_USER_SEARCH_LDAPSearch2"), ldap.SCOPE_SUBTREE, "(sAMAccountName=%(user)s)"),
 )
 
 AUTH_LDAP_USER_ATTR_MAP = {
-        "username": "sAMAccountName",
-        "first_name": "givenName",
-        "last_name": "sn",
-        "email": "mail",
+    "username": "sAMAccountName",
+    "first_name": "givenName",
+    "last_name": "sn",
+    "email": "mail",
 
-        # "password": "userPassword",
+    # "password": "userPassword",
 }
 
 AUTH_LDAP_GROUP_SEARCH = LDAPSearch(config("AUTH_LDAP_GROUP_SEARCH1"),
-                                        ldap.SCOPE_SUBTREE, "(objectClass=Group)")
+                                    ldap.SCOPE_SUBTREE, "(objectClass=Group)")
 AUTH_LDAP_GROUP_TYPE = GroupOfNamesType(name_attr="cn")
 # AUTH_LDAP_GROUP_TYPE = PosixGroupType(name_attr="cn")
 
@@ -209,7 +198,7 @@ AUTH_LDAP_REQUIRE_GROUP = config("AUTH_LDAP_REQUIRE_GROUP1")
 AUTH_LDAP_MIRROR_GROUPS = True
 
 AUTH_LDAP_USER_FLAGS_BY_GROUP = {
-        "is_active": config("AUTH_LDAP_USER_FLAGS_BY_GROUP1"),
+    "is_active": config("AUTH_LDAP_USER_FLAGS_BY_GROUP1"),
 }
 
 # AUTH_LDAP_PROFILE_ATTR_MAP = {
@@ -223,21 +212,20 @@ AUTH_LDAP_FIND_GROUP_PERMS = True
 AUTH_LDAP_CACHE_GROUPS = True
 AUTH_LDAP_CACHE_TIMEOUT = 3600
 
-SESSION_COOKIE_AGE = 30 * 24 * 60 * 60      # Время жизни сессии в куках (указывается в секундах 30 дней)
+SESSION_COOKIE_AGE = 30 * 24 * 60 * 60  # Время жизни сессии в куках (указывается в секундах 30 дней)
 # также можно настроить куки-name (название куки, в которой будет хранится ключ сессии)
 # и истечение сессии при закрытии браузера (по умолчанию false)
 
 AUTHENTICATION_BACKENDS = (
-        'django_auth_ldap.backend.LDAPBackend',
-        'django.contrib.auth.backends.ModelBackend',
+    'django_auth_ldap.backend.LDAPBackend',
+    'django.contrib.auth.backends.ModelBackend',
 
-        # 'django_remote_auth_ldap.backend.RemoteUserLDAPBackend',
+    # 'django_remote_auth_ldap.backend.RemoteUserLDAPBackend',
 )
 
 DRAL_CHECK_DOMAIN = False
 
 # AUTH_LDAP_CONNECTION_OPTIONS = { ldap.OPT_REFERRALS: 0}
-
 
 
 # Настройки Celery
@@ -251,7 +239,6 @@ DRAL_CHECK_DOMAIN = False
 # CELERY_TIMEZONE = 'Europe/Moscow'  # Временная зона для планировщика задач
 
 
-
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_TASK_TRACK_STARTED = True
@@ -261,7 +248,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Europe/Moscow'
 
-CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 CELERY_BEAT_SCHEDULE = {
     "sample_task": {

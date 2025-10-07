@@ -5,7 +5,7 @@ import datetime
 
 from celery.utils.log import get_task_logger
 
-from easysnmp import snmp_get
+# from easysnmp import snmp_get
 
 
 

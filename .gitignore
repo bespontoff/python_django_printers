@@ -11,3 +11,5 @@ monitoring_printers/db.sqlite3
 monitoring_printers/db_04 08 2024.json
 import_data.xlsx
 .env
+venv
+.idea

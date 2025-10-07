@@ -5,11 +5,11 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.views import LoginView
 
 import ldap
-from django_auth_ldap.backend import LDAPBackend #, populate_user
+from django_auth_ldap.backend import LDAPBackend  #, populate_user
 
 
 def login_view(request):
-    if request.method == 'POST':    # для POST пытаемся аутентифицировать пользователя
+    if request.method == 'POST':  # для POST пытаемся аутентифицировать пользователя
         auth_form = AuthForm(request.POST)
         if auth_form.is_valid():
             username = auth_form.cleaned_data['username']
@@ -19,19 +19,17 @@ def login_view(request):
 
             user = authenticate(username=username, password=password)
 
-
             if user is not None:
                 if user.groups.filter(name__in=['WG_Access_PrintersFunc']).exists():
                     if user.is_active:
-                        login(request, user) 
+                        login(request, user)
                         return HttpResponse('Успешная авторизация')
                     else:
                         return HttpResponse('Успешная авторизация, но пользователь отключен')
-                else:                        
-                    return HttpResponse('Успешная авторизация, но нет группы')                
+                else:
+                    return HttpResponse('Успешная авторизация, но нет группы')
             else:
                 auth_form.add_error('__all__', 'Ошибка! Проверьте правильность логина и пароля.')
-
 
             # if user:
             #     if user.is_active:
@@ -42,7 +40,7 @@ def login_view(request):
             # else:
             #     auth_form.add_error('__all__', 'Ошибка! Проверьте правильность логина и пароля.')
 
-    else:   # для всех остальных запросов просто отображаем форму, в .т.ч. с ошибками
+    else:  # для всех остальных запросов просто отображаем форму, в .т.ч. с ошибками
         auth_form = AuthForm()
 
     context = {
@@ -53,13 +51,6 @@ def login_view(request):
 
 class AnotherLoginView(LoginView):
     template_name = 'app_auth_users/login.html'
-
-
-
-
-
-
-
 
 # # LDAP authentication backend
 
@@ -89,8 +80,6 @@ class AnotherLoginView(LoginView):
 #         }
 #         user_model = get_user_model()
 #         return user_model.objects.get_or_create(**kwargs)
-    
-
 
 
 # # Classical authentication backend
@@ -119,5 +108,3 @@ class AnotherLoginView(LoginView):
 #         user = ModelBackend.authenticate(self, username, password)
 
 #         return user
-
-    
