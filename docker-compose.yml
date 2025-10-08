@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   backend:
     container_name: morda
@@ -11,6 +9,5 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./monitoring_printers:/usr/src/app/
-#    working_dir: /usr/src/app
     ports:
       - 8000:8000
