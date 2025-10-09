@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.10
 LABEL authors="m.denisov@agrohold.ru"
 
 RUN apt-get update && apt-get install -y python3-dev libldap2-dev libsasl2-dev libssl-dev
