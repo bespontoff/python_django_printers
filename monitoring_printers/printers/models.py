@@ -181,10 +181,7 @@ class Printed_pagesModel(models.Model):
         indexes = [models.Index(fields=['created']), ]
 
     def __str__(self):
-        return self.printers_name + ' | ' + self.serial_number + ' | ' + self.ip_address + ' | ' + self.printed_pages
-        # return self.service_object_name + ' | ' + self.printers_name + ' | ' \
-        #         + self.serial_number + ' | ' + self.ip_address + ' | ' + self.name_on_print_server \
-        #          + ' | ' + self.created + ' | ' + self.printed_pages
+        return f'{self.printers_name} | {self.serial_number} | {self.ip_address} | {self.printed_pages}'
 
 
 """
