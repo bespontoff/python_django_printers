@@ -1,5 +1,4 @@
 from django.db import models
-from django.urls import reverse
 
 
 class StatusPrintersModel(models.Model):
@@ -154,8 +153,6 @@ class Service_objectModel(models.Model):
 
 
 class Printed_pagesModel(models.Model):
-    # printers_in_service = models.ForeignKey('Printers_in_serviceModel', blank=True, null=True, on_delete=models.DO_NOTHING,
-    #                                          verbose_name='Принтер (учет)')#related_name='printers_in_service_fk',
     printers_in_service = models.IntegerField(verbose_name='id принтера', )
 
     service_object_name = models.CharField(max_length=100, verbose_name='Объект_обслуживания', )
@@ -191,7 +188,8 @@ class Printed_pagesModel(models.Model):
     # prefetch_related("cartridges_printers") - для ManyToManyField
 
 
-В качестве параметров select_related принимает имена ForeignKey/OneToOne полей или related_name поля OneToOne в связанной таблице.
+В качестве параметров select_related принимает имена ForeignKey/OneToOne полей или related_name поля OneToOne 
+в связанной таблице.
 Также можно передавать имена полей в связанных через отношение внешнего ключа таблицах, например:
 
 Employee.objects.all().select_related("city", "city__country")
@@ -201,19 +199,9 @@ Employee.objects.all().select_related("city").select_related("city__country")
 Employee.objects.all().select_related("city__country")
 
 
-В отличие от select_related, prefetch_related загружает связанные объекты отдельным запросом для каждого поля переданного
-в качестве параметра и производит связывание объектов внутри python.
-Однако prefetch_related можно также использовать там, где мы используем select_related, чтобы загрузить связанные записи используя дополнительный запрос, вместо JOIN.
+В отличие от select_related, prefetch_related загружает связанные объекты отдельным запросом для каждого поля 
+переданного в качестве параметра и производит связывание объектов внутри python.
+Однако prefetch_related можно также использовать там, где мы используем select_related, чтобы загрузить связанные 
+записи используя дополнительный запрос, вместо JOIN.
 """
 
-# class Printer_сartridges(models.Model):
-#     printers = models.ForeignKey('Printers', to_field='name', null=True, on_delete=models.PROTECT, verbose_name='Модель принтера')
-#     cartridge = models.ForeignKey('Cartridges', to_field='name', null=True, on_delete=models.PROTECT, verbose_name='Картридж')
-
-#     class Meta:
-#         verbose_name_plural = '(1) Принтеры_Картриджи'
-#         verbose_name = 'Принтер_Картридж'
-#         ordering = ['printers',]
-
-#     def __str__(self):
-#         return self.printers.name + ' | ' + self.cartridge.name
