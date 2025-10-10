@@ -7,8 +7,8 @@ urlpatterns = [
     # path('', index, name='index'),
     path('', service_object_list_view, name='index'),
 
-    path('test_listview/', Printers_in_serviceModel_ListView.as_view(), name='printers_in_serviceModel_listView'),
-    path('test_listview/<int:pk>/', Printers_in_serviceModel_DetailView.as_view(), name='printers_in_serviceModel_detailView'),
+    path('test_listview/', PrintersInServiceListView.as_view(), name='printers_in_serviceModel_listView'),
+    path('test_listview/<int:pk>/', PrintersInServiceDetailView.as_view(), name='printers_in_serviceModel_detailView'),
 
 
     path('printed_pages_on_printers_list', printed_pages_on_printers_list, name='printed_pages_on_printers_list'),

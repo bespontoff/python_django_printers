@@ -177,6 +177,7 @@ AUTH_LDAP_BIND_PASSWORD = config("AUTH_LDAP_BIND_PASSWORD")
 AUTH_LDAP_USER_SEARCH = LDAPSearchUnion(
     LDAPSearch(config("AUTH_LDAP_USER_SEARCH_LDAPSearch1"), ldap.SCOPE_SUBTREE, "(sAMAccountName=%(user)s)"),
     LDAPSearch(config("AUTH_LDAP_USER_SEARCH_LDAPSearch2"), ldap.SCOPE_SUBTREE, "(sAMAccountName=%(user)s)"),
+    LDAPSearch(config("AUTH_LDAP_USER_SEARCH_LDAPSearch3"), ldap.SCOPE_SUBTREE, "(sAMAccountName=%(user)s)"),
 )
 
 AUTH_LDAP_USER_ATTR_MAP = {
