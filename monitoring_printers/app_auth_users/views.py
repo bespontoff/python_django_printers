@@ -1,11 +1,10 @@
-from django.shortcuts import render, redirect
-from .forms import AuthForm
-from django.http import HttpResponse
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.views import LoginView
+from django.http import HttpResponse
+from django.shortcuts import render
+from django_auth_ldap.backend import LDAPBackend  # , populate_user
 
-import ldap
-from django_auth_ldap.backend import LDAPBackend  #, populate_user
+from .forms import AuthForm
 
 
 def login_view(request):
@@ -20,7 +19,7 @@ def login_view(request):
             user = authenticate(username=username, password=password)
 
             if user is not None:
-                if user.groups.filter(name__in=['WG_Access_PrintersFunc']).exists() or True:
+                if user.groups.filter(name__in=['WG_Access_PrintersFunc']).exists():
                     if user.is_active:
                         login(request, user)
                         return HttpResponse('Успешная авторизация')
