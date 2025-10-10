@@ -42,6 +42,8 @@ DEBUG = config("DEBUG", cast=bool)
 
 ALLOWED_HOSTS = ['*']  # [config("HOST_IP"), '127.0.0.1']
 
+INTERNAL_IPS = ['127.0.0.1']
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -55,6 +57,7 @@ INSTALLED_APPS = [
     # приложение можно поставить в начало списка, чтобы template брались в первую очередь из его раздела
     'app_auth_users.apps.AppAuthUsersConfig',
 
+    'debug_toolbar',
     'django_dyn_dt',  # <-- NEW App
     'django_tables2',
     'django_select2',
@@ -62,6 +65,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'widget_tweaks',
     'django_celery_beat',
+
 ]
 
 MIDDLEWARE = [
@@ -75,9 +79,9 @@ MIDDLEWARE = [
 
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 
-# MIDDLEWARE = [
+]
 
 ROOT_URLCONF = 'monitoring_printers.urls'
 
