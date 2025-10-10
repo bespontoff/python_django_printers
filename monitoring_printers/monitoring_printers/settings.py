@@ -110,7 +110,7 @@ WSGI_APPLICATION = 'monitoring_printers.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / config('DATABASE_NAME'),
     }
 }
 
