@@ -1483,92 +1483,85 @@ def printed_pages_list_view_all_last(request):
 def service_object_printed_pages_list_view(request, id):
     form = Printed_pagesForm()
 
+    start = datetime.datetime.now()
     print("+" * 35)
-    print("Start tasks - datetime: ", datetime.datetime.now())
+    print("Start tasks - datetime: ", start)
     print("-" * 35)
 
     # Получаем все неархивные записи из Printers_in_serviceModel с учетом объекта обслуживания
     dataset_printers_in_service = Printers_in_serviceModel.objects.filter(archived=False).filter(service_object_id=id)
 
-    dataset_thead = ['IP-адрес', 'Модель принтера', 'Статус', 'Имя на Print-server', 'Локация/Кабинет', 'S/N',
-                     'Распечатано страниц (всего)', ]
+    # dataset_thead = ['IP-адрес', 'Модель принтера', 'Статус', 'Имя на Print-server', 'Локация/Кабинет', 'S/N',
+    #                  'Распечатано страниц (всего)', ]
 
     title_text = "Распечатано страниц"
 
     dataset = []
 
-    # #####
-    # tasks = []
+    printers = dataset_printers_in_service.filter(status_printer=2)  # принтеры в работе
 
-    # for data_printers_in_service in dataset_printers_in_service:
+    # [(ip, oid, port),...]
+    requests_data = [(printer.ip_address, printer.printers.sn_oid.oid, 161) for printer in
+                     printers if printer.ip_address is not None]  # TODO: убрать хардкодный порт
+    requests_data += [(printer.ip_address, printer.printers.printed_pages_all_oid.oid, 161) for printer in
+                      printers if printer.ip_address is not None]
 
-    #     # print("" + data_printers_in_service.ip_address)
+    snmp = SNMP()
+    data = snmp.get_bulk_value_by_oid(requests_data)
+    snmp.close()
 
-    #     # return "" + ip + "_" +  oid + "_" + response.value
-    #     tasks.append(asyncio.create_task(async_get_data_by_oid(data_printers_in_service.ip_address,
-    #     data_printers_in_service.printers.sn_oid.oid)))
-    #     tasks.append(asyncio.create_task(async_get_data_by_oid(data_printers_in_service.ip_address,
-    #     data_printers_in_service.printers.printed_pages_all_oid.oid)))
+    for printer in dataset_printers_in_service:
+        try:
+            sn_oid, error = next((item['value'], item['error']) for item in data
+                                 if item['oid'] == printer.printers.sn_oid.oid
+                                 and item['ip'] == printer.ip_address)
+        except StopIteration:
+            sn_oid, error = None, ''
 
-    # results_data = await asyncio.gather(*tasks)
-
-    # # results_data = asyncio.run(create_massive_by_oid(dataset_printers_in_service))
-
-    # dict_async_get_data_by_oid = {}
-    # for result in results_data:
-    #     # return "" + ip + "_" +  oid + "_" + response.value
-    #     tmp_massive = result.split("_")
-    #     dict_async_get_data_by_oid[tmp_massive[0] + "_" + tmp_massive[1]] = tmp_massive[2]
-    # #####
-
-    for data_printers_in_service in dataset_printers_in_service:
-
-        sn_oid = get_data_by_oid(data_printers_in_service.ip_address,
-                                 data_printers_in_service.printers.sn_oid.oid),  # 8
-        printed_pages_all_oid = get_data_by_oid(data_printers_in_service.ip_address,
-                                                data_printers_in_service.printers.printed_pages_all_oid.oid),  # 9
-        # sn_oid =  dict_async_get_data_by_oid.get(data_printers_in_service.ip_address + "_"
-        # + data_printers_in_service.printers.sn_oid.oid)
-        # printed_pages_all_oid = dict_async_get_data_by_oid.get(data_printers_in_service.ip_address
-        # + "_" + data_printers_in_service.printers.printed_pages_all_oid.oid)
+        try:
+            printed_pages_all_oid, error2 = next((item['value'], item['error']) for item in data
+                                                 if item['oid'] == printer.printers.printed_pages_all_oid.oid
+                                                 and item['ip'] == printer.ip_address)
+        except StopIteration:
+            printed_pages_all_oid, error2 = 0, ''
 
         # проверяем корректность данных
-        errors = ""
+        errors = '\n'.join((error, error2))
 
-        if data_printers_in_service.serial_number != sn_oid[0]:
+        if printer.serial_number != sn_oid:
             errors += 'S/N не равны| '
-        if printed_pages_all_oid[0] == 0 or printed_pages_all_oid[0] == '' or printed_pages_all_oid[0] == None or \
-                printed_pages_all_oid[0] == '\x00\x00\x00\x00':
+        if printed_pages_all_oid == '0' or printed_pages_all_oid == '' or printed_pages_all_oid is None or \
+                printed_pages_all_oid == '\x00\x00\x00\x00':
             errors += 'printed_pages_error|'
 
         # если ошибок нет, записисываем данные в БД
         if errors == "":
             Printed_pagesModel.objects.create(
-                printers_in_service=data_printers_in_service.id,
+                printers_in_service=printer.id,
 
-                service_object_name=data_printers_in_service.service_object.service_object_name,
-                printers_name=data_printers_in_service.printers.name,
-                serial_number=data_printers_in_service.serial_number,
-                ip_address=data_printers_in_service.ip_address,
-                name_on_print_server=data_printers_in_service.name_on_print_server,
-                location=data_printers_in_service.location,
+                service_object_name=printer.service_object.service_object_name,
+                printers_name=printer.printers.name,
+                serial_number=printer.serial_number,
+                ip_address=printer.ip_address,
+                name_on_print_server=printer.name_on_print_server,
+                location=printer.location,
 
-                printed_pages=int(printed_pages_all_oid[0]),
+                printed_pages=printed_pages_all_oid,
 
                 error_message="")
 
         dataset.append(
             [
-                data_printers_in_service.service_object,  # 0
-                data_printers_in_service.serial_number,  # 1
-                data_printers_in_service.printers,  # 2
-                data_printers_in_service.status_printer,  # 3
-                data_printers_in_service.print_server,  # 4
-                data_printers_in_service.name_on_print_server,  # 5
-                data_printers_in_service.ip_address,  # 6
-                data_printers_in_service.location,  # 7
-                sn_oid[0],  # 8
-                printed_pages_all_oid[0],  # 9
+                printer.service_object,  # 0
+                printer.serial_number,  # 1
+                printer.printers,  # 2
+                printer.status_printer,  # 3
+                printer.print_server,  # 4
+                printer.name_on_print_server,  # 5
+                printer.ip_address,  # 6
+                printer.location,  # 7
+                sn_oid,  # 8
+                printed_pages_all_oid,  # 9
                 datetime.datetime.now(),  # 10
                 errors,  # 11
 
@@ -1576,7 +1569,7 @@ def service_object_printed_pages_list_view(request, id):
         )
 
     print("+" * 35)
-    print("End_tasks - datetime: ", datetime.datetime.now())
+    print("End_tasks - duration: ", datetime.datetime.now() - start)
     print("+" * 35)
     for data in dataset:
         print(data)
